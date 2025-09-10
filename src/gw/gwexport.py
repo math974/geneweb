@@ -98,7 +98,7 @@ def select(
     Returns:
         Tuple of (person_filter, family_filter) functions
     """
-    from .gwutil import Driver, Collection, person_of_string_key
+    from gwutil import Driver, Collection, person_of_string_key
     import time
     from typing import Any
 

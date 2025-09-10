@@ -93,8 +93,6 @@ class Gwu:
         if not base_name:
             raise ValueError("Expect a database")
 
-        # Set base directory
-        os.chdir(os.path.dirname(base_name))
 
         with Driver.open_database(base_name) as base:
             select = gwexport.select(base, opts, [])
