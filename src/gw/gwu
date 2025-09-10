@@ -25,57 +25,89 @@ class Gwu:
     def create_argument_parser(
         self, opts: gwexport.GwexportOpts
     ) -> argparse.ArgumentParser:
+        class StoreInOpts(argparse.Action):
+            def __init__(self, option_strings, dest, **kwargs):
+                super().__init__(option_strings=option_strings, dest=dest, **kwargs)
+            
+            def __call__(self, parser, namespace, values, option_string=None):
+                setattr(opts, self.dest, values)
+                setattr(namespace, self.dest, values)
+
         parser = argparse.ArgumentParser()
 
         parser.add_argument( # displayed as '<BASE>'
-            "<BASE>", help="Base name of the database", type=str, nargs='?'
+            "base_name",
+            metavar="<BASE>",
+            help="Base name of the database",
+            type=str,
+            action="store",
         )
         parser.add_argument(
             "-odir",
             help="Create files from original name in directory (else on -o file)",
             type=str,
+            action=StoreInOpts,
+            dest="out_dir"
         )
 
         parser.add_argument(
             "-isolated",
-            action="store_true",
+            action=StoreInOpts,
             help="Export isolated persons (work only if export all database)",
+            nargs=0,
+            const=True,
+            dest="isolated"
         )
 
         parser.add_argument(
             "-old_gw",
-            action="store_true",
+            action=StoreInOpts,
             help="Do not export additional fields (for backward compatibility: < 7.00)",
+            nargs=0,
+            const=True,
+            dest="old_gw"
         )
 
         parser.add_argument(
             "-raw",
-            action="store_true",
+            action=StoreInOpts,
             help="Raw output (without possible utf-8 conversion)",
+            nargs=0,
+            const=True,
+            dest="raw_output"
         )
 
         parser.add_argument(
             "-sep",
-            action="append",
+            action=StoreInOpts,
             help='To use together with the option "-odir": separate this person and all ancestors',
+            default=[],
+            dest="separate_list"
         )
 
         parser.add_argument(
             "-sep_only_file",
             help='With option "-sep", tells to separate only groups of that file',
             type=str,
+            action=StoreInOpts,
+            dest="only_file"
         )
 
         parser.add_argument(
             "-sep_limit",
             type=int,
             help='When using option "-sep", sets the limit for reconnecting isolated family groups',
+            action=StoreInOpts,
+            dest="sep_limit"
         )
 
         parser.add_argument(
             "-all_files",
-            action="store_true",
+            action=StoreInOpts,
             help="Save all content of notes_d in the .gw file, including files without Wiki links",
+            nargs=0,
+            const=True,
+            dest="all_files"
         )
 
         # Add Gwexport options (placeholder)
@@ -89,7 +121,7 @@ class Gwu:
         parser = self.create_argument_parser(opts)
         args = parser.parse_args()
 
-        base_name = args.__getattribute__("<BASE>")
+        base_name = args.base_name
         if not base_name:
             raise ValueError("Expect a database")
 
@@ -112,12 +144,12 @@ class Gwu:
                 Driver.load_descends_array(base)
 
             # Get output file handler
-            ofile, oc, close = opts.get_output_handlers()
+            output_filename, output_writer, close_output_stream = opts.oc
 
             if not self.raw_output:
-                oc("encoding: utf-8\n")
+                output_writer("encoding: utf-8\n")
 
-            oc("gwplus\n\n" if not self.old_gw else "\n")
+            output_writer("gwplus\n\n" if not self.old_gw else "\n")
 
             # Prepare and execute export
             GwuLib.prepare_free_occ(base)
@@ -128,7 +160,7 @@ class Gwu:
             # Close all open file handlers
             for _, (_, _, close_fn) in src_oc_ht.items():
                 close_fn()
-            close()
+            close_output_stream()
 
 
 if __name__ == "__main__":

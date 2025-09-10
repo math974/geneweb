@@ -52,6 +52,9 @@ class GwexportOpts:
 
     # Unused by this module - (filename, write_func, close_func)
     oc: Tuple[str, Callable[[str], None], Callable[[], None]] = None
+    """Output handlers for the export process.
+    (filename, write_func, close_func)
+    """
 
     # If asc, ascdesc and desc are not set & parenting = true,
     # then select individuals involved in parentship between pair of keys
@@ -77,7 +80,7 @@ class GwexportOpts:
             self.surnames = []
         if self.oc is None:
             # Default placeholder for output handlers
-            self.oc = ("", lambda s: None, lambda: None)
+            self.oc = ("", print, lambda: None)
 
 
 # Default set of options
@@ -306,20 +309,24 @@ def select(
     return person_filter, family_filter
 
 
-def add_arguments(parser) -> None:
+def add_arguments(parser, action_class=None) -> None:
     """
     Add export-related arguments to an ArgumentParser.
     This is equivalent to the OCaml speclist function.
 
     Args:
         parser: ArgumentParser instance to add arguments to
+        action_class: Optional custom action class to use for argument handling
     """
+    kwargs = {"action": action_class} if action_class else {}
+
     parser.add_argument(
         "-a",
         type=int,
         metavar="N",
         help="maximum generation of the root's ascendants",
         dest="asc",
+        **kwargs,
     )
 
     parser.add_argument(
@@ -328,15 +335,16 @@ def add_arguments(parser) -> None:
         metavar="N",
         help="maximum generation of the root's ascendants descendants",
         dest="ascdesc",
+        **kwargs,
     )
 
     parser.add_argument(
         "-key",
-        action="append",
         metavar="KEY",
         help="key reference of root person. Used for -a/-d options. Can be used "
         'multiple times. Key format is "First Name.occ SURNAME"',
         dest="keys",
+        **{**kwargs, "action": action_class or "append"},
     )
 
     parser.add_argument(
@@ -347,6 +355,7 @@ def add_arguments(parser) -> None:
         "exported unless it is Public. All the spouses and descendants are also "
         "censored.",
         dest="censor",
+        **kwargs,
     )
 
     parser.add_argument(
@@ -355,6 +364,7 @@ def add_arguments(parser) -> None:
         choices=["ASCII", "ANSEL", "ANSI", "UTF-8"],
         help="set charset; default is UTF-8",
         dest="charset",
+        **kwargs,
     )
 
     parser.add_argument(
@@ -363,25 +373,35 @@ def add_arguments(parser) -> None:
         metavar="N",
         help="maximum generation of the root's descendants",
         dest="desc",
+        **kwargs,
     )
 
     parser.add_argument(
-        "-mem", action="store_true", help="save memory space, but slower", dest="mem"
+        "-mem",
+        help="save memory space, but slower",
+        dest="mem",
+        **{**kwargs, "action": action_class or "store_true"},
     )
 
     parser.add_argument(
-        "-nn", action="store_true", help="no (database) notes", dest="no_notes_nn"
+        "-nn",
+        help="no (database) notes",
+        dest="no_notes_nn",
+        **{**kwargs, "action": action_class or "store_true"},
     )
 
     parser.add_argument(
-        "-nnn", action="store_true", help="no notes (implies -nn)", dest="no_notes_nnn"
+        "-nnn",
+        help="no notes (implies -nn)",
+        dest="no_notes_nnn",
+        **{**kwargs, "action": action_class or "store_true"},
     )
 
     parser.add_argument(
         "-nopicture",
-        action="store_true",
         help="don't extract individual picture",
         dest="no_picture",
+        **{**kwargs, "action": action_class or "store_true"},
     )
 
     parser.add_argument(
@@ -390,32 +410,33 @@ def add_arguments(parser) -> None:
         metavar="FILE",
         help="output file name (default: stdout)",
         dest="output_file",
+        **kwargs,
     )
 
     parser.add_argument(
         "-parentship",
-        action="store_true",
         help="select individuals involved in parentship computation between pairs of "
         "keys. Pairs must be defined with -key option, descendant first: e.g. "
         '-key "Descendant.0 SURNAME" -key "Ancestor.0 SURNAME". If multiple '
         "pairs are provided, union of persons are returned.",
         dest="parentship",
+        **{**kwargs, "action": action_class or "store_true"},
     )
 
     parser.add_argument(
         "-picture-path",
-        action="store_true",
         help="extract pictures path",
         dest="picture_path",
+        **{**kwargs, "action": action_class or "store_true"},
     )
 
     parser.add_argument(
         "-s",
-        action="append",
         metavar="SN",
         help="select this surname (option usable several times, union of "
         "surnames will be used)",
         dest="surnames",
+        **{**kwargs, "action": action_class or "append"},
     )
 
     parser.add_argument(
@@ -424,9 +445,15 @@ def add_arguments(parser) -> None:
         metavar="SRC",
         help="replace individuals and families sources. Also delete event sources",
         dest="source",
+        **kwargs,
     )
 
-    parser.add_argument("-v", action="store_true", help="verbose", dest="verbose")
+    parser.add_argument(
+        "-v",
+        help="verbose",
+        dest="verbose",
+        **{**kwargs, "action": action_class or "store_true"},
+    )
 
 
 # Error message for argument parsing
