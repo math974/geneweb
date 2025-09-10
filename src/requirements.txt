@@ -1,0 +1,1 @@
+-e git+ssh://git@github.com/math974/geneweb.git@737fb8cf78b24bc671e492f36790b7cdd3bd78d9#egg=geneweb_python&subdirectory=src
