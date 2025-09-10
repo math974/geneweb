@@ -70,3 +70,6 @@ Export a database to a GeneWeb file (.gw)
                       sources. Also delete event sources
 -v                    verbose
 ```
+
+## Example
+`./gwu <database> -o <name>.gw`
