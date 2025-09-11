@@ -4,40 +4,75 @@ import shutil
 import tempfile
 import pytest
 
-def test_gwu_odir():
+#pytest test_gwu_odir.py -v -s
+
+# Tableau des commandes à tester
+TEST_COMMANDS = [
+    {
+        "name": "test_odir",
+        "args": ["-odir", "OUTPUT_DIR"],
+        "description": "Test de l'option -odir"
+    },
+    # Ajouter d'autres commandes ici si besoin
+    # {
+    #     "name": "test_raw", 
+    #     "args": ["-raw"],
+    #     "description": "Test de l'option -raw"
+    # },
+]
+
+@pytest.mark.parametrize("command", TEST_COMMANDS, ids=lambda cmd: cmd["name"])
+def test_gwu_commands(command):
+    """Test générique pour comparer les outputs entre gwu et gwu.old"""
     # Chemins vers les binaires gwu
     gwu_new = os.path.abspath("../../src/gw/gwu")
     gwu_old = os.path.abspath("../../src/gw/gwu.old")
-    # Chemin vers une base de test (à adapter si besoin)
+    # Chemin vers une base de test
     base_file = os.path.abspath("../../examples/base.gwb")
     
-    # Crée un dossier temporaire pour l'output
-    with tempfile.TemporaryDirectory() as odir:
-        # Exécute la commande avec le nouveau binaire
-        result_new = subprocess.run(
-            [gwu_new, "-odir", odir, base_file],
-            capture_output=True, text=True
-        )
+    with tempfile.TemporaryDirectory() as temp_dir:
+        # Prépare les arguments en remplaçant OUTPUT_DIR par le vrai chemin
+        args = []
+        for arg in command["args"]:
+            if arg == "OUTPUT_DIR":
+                args.append(temp_dir)
+            else:
+                args.append(arg)
         
-        # Exécute la commande avec l'ancien binaire
-        result_old = subprocess.run(
-            [gwu_old, "-odir", odir, base_file],
-            capture_output=True, text=True
-        )
+        # Commandes complètes
+        cmd_new = [gwu_new] + args + [base_file]
+        cmd_old = [gwu_old] + args + [base_file]
         
-        print("=== NOUVEAU GWU ===")
-        print("STDOUT:\n", result_new.stdout)
-        print("STDERR:\n", result_new.stderr)
+        print(f"\n=== Test: {command['description']} ===")
+        print(f"Commande testée: {' '.join(args)}")
         
-        print("\n=== ANCIEN GWU ===")
-        print("STDOUT:\n", result_old.stdout)
-        print("STDERR:\n", result_old.stderr)
-
-        # Vérifie que les deux binaires s'exécutent correctement
-        assert result_new.returncode == 0, f"Erreur avec le nouveau gwu: {result_new.stderr}"
-        assert result_old.returncode == 0, f"Erreur avec l'ancien gwu: {result_old.stderr}"
+        # Exécute le nouveau binaire
+        result_new = subprocess.run(cmd_new, capture_output=True, text=True)
         
-        # Compare les outputs (on compare stderr car c'est là que l'output GWU est envoyé)
-        assert result_new.stderr == result_old.stderr, "Les outputs des deux versions de gwu sont différents !"
+        # Exécute l'ancien binaire
+        result_old = subprocess.run(cmd_old, capture_output=True, text=True)
         
-        print("Test réussi ! Les deux versions produisent le même output.")
+        # Affiche les résultats pour debug
+        print(f"\n--- NOUVEAU GWU (return code: {result_new.returncode}) ---")
+        if result_new.stdout:
+            print(f"STDOUT:\n{result_new.stdout}")
+        if result_new.stderr:
+            print(f"STDERR:\n{result_new.stderr}")
+        
+        print(f"\n--- ANCIEN GWU (return code: {result_old.returncode}) ---")
+        if result_old.stdout:
+            print(f"STDOUT:\n{result_old.stdout}")
+        if result_old.stderr:
+            print(f"STDERR:\n{result_old.stderr}")
+        
+        # Vérifications
+        assert result_new.returncode == result_old.returncode, \
+            f"Les codes de retour diffèrent: nouveau={result_new.returncode}, ancien={result_old.returncode}"
+        
+        assert result_new.stdout == result_old.stdout, \
+            f"STDOUT différent!\nNouveau:\n{result_new.stdout}\nAncien:\n{result_old.stdout}"
+        
+        assert result_new.stderr == result_old.stderr, \
+            f"STDERR différent!\nNouveau:\n{result_new.stderr}\nAncien:\n{result_old.stderr}"
+        
+        print(f"Test réussi pour {command['name']}: les deux versions produisent le même output.")
