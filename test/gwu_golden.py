@@ -112,13 +112,24 @@ def cmd_record(base: str, dist_dir: Path, ignore_trailing_space: bool) -> None:
     dir_out = bases_dir / f"{base}.dir.golden.gw"
     outdir = bases_dir / f"outdir.{base}.golden"
 
-    run_gwu(gwu, bases_dir, base, std_out, None)
-    _, outdir_path, _ = run_gwu(gwu, bases_dir, base, dir_out, outdir)
+    # Export standard (+ capture logs)
+    _, _, std_stderr = run_gwu(gwu, bases_dir, base, std_out, None)
+    # Sauvegarder les logs en golden
+    std_log_golden = golden_dir / f"{base}.golden.stderr"
+    if std_stderr.exists():
+        shutil.copy2(std_stderr, std_log_golden)
+
+    # Export avec -odir (+ capture logs)
+    _, outdir_path, dir_stderr = run_gwu(gwu, bases_dir, base, dir_out, outdir)
 
     # Copier vers test/golden/BASE
     shutil.copy2(std_out, golden_dir / f"{base}.golden.gw")
     if outdir_path and (outdir_path / f"{base}.gw").exists():
         shutil.copy2(outdir_path / f"{base}.gw", golden_dir / f"{base}.dir.golden.gw")
+    # Logs -odir
+    dir_log_golden = golden_dir / f"{base}.dir.golden.stderr"
+    if dir_stderr.exists():
+        shutil.copy2(dir_stderr, dir_log_golden)
 
     print(f"Golden enregistré dans {golden_dir}")
 
@@ -129,6 +140,8 @@ def cmd_verify(base: str, dist_dir: Path, ignore_trailing_space: bool) -> int:
     golden_dir = Path("test") / "golden" / base
     golden_std = golden_dir / f"{base}.golden.gw"
     golden_dirfile = golden_dir / f"{base}.dir.golden.gw"
+    golden_std_log = golden_dir / f"{base}.golden.stderr"
+    golden_dir_log = golden_dir / f"{base}.dir.golden.stderr"
     if not golden_std.exists():
         raise SystemExit(f"Golden manquant: {golden_std}")
 
@@ -140,8 +153,17 @@ def cmd_verify(base: str, dist_dir: Path, ignore_trailing_space: bool) -> int:
     cur_std = bases_dir / f"{base}.current.gw"
     cur_dir_marker = bases_dir / f"{base}.dir.current.gw"
     cur_outdir = bases_dir / f"outdir.{base}.current"
-    run_gwu(gwu, bases_dir, base, cur_std, None)
-    _, cur_outdir, _ = run_gwu(gwu, bases_dir, base, cur_dir_marker, cur_outdir)
+    _, _, cur_std_stderr = run_gwu(gwu, bases_dir, base, cur_std, None)
+    # Sauvegarder une copie distincte des logs courants (standard)
+    cur_std_log = bases_dir / f"{base}.golden_verify.stderr"
+    if cur_std_stderr.exists():
+        shutil.copy2(cur_std_stderr, cur_std_log)
+
+    _, cur_outdir, cur_dir_stderr = run_gwu(gwu, bases_dir, base, cur_dir_marker, cur_outdir)
+    # Sauvegarder logs -odir
+    cur_dir_log = bases_dir / f"{base}.dir.golden_verify.stderr"
+    if cur_dir_stderr.exists():
+        shutil.copy2(cur_dir_stderr, cur_dir_log)
 
     # Comparer
     exit_code = 0
@@ -168,6 +190,29 @@ def cmd_verify(base: str, dist_dir: Path, ignore_trailing_space: bool) -> int:
                 print("OK: export -odir conforme au golden.")
     else:
         print(f"Golden -odir absent ({golden_dirfile}), vérification sautée.")
+
+    # Comparaison des logs si présents
+    if golden_std_log.exists() and cur_std_log.exists():
+        log_diff = unified_diff(golden_std_log, cur_std_log, ignore_trailing_space)
+        if log_diff:
+            print("Diff sur logs standard (-v):")
+            print(log_diff)
+            exit_code = 1
+        else:
+            print("OK: logs standard (-v) conformes au golden.")
+    else:
+        print("Logs standard non comparés (golden ou courant manquant).")
+
+    if golden_dir_log.exists() and cur_dir_log.exists():
+        dlog_diff = unified_diff(golden_dir_log, cur_dir_log, ignore_trailing_space)
+        if dlog_diff:
+            print("Diff sur logs -odir (-v):")
+            print(dlog_diff)
+            exit_code = 1
+        else:
+            print("OK: logs -odir (-v) conformes au golden.")
+    else:
+        print("Logs -odir non comparés (golden ou courant manquant).")
 
     return exit_code
 
