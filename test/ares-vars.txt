@@ -1,0 +1,6 @@
+DBNAME='ares'
+REFDBNAME='ares'
+DIST_DIR='./distribution'
+BIN_DIR="/gw"
+BASES_DIR="/bases"
+GWCOPT='-v -f -cg'
