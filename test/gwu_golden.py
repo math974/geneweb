@@ -5,7 +5,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 import difflib
 
 
@@ -81,7 +81,14 @@ def build_gwb_if_needed(gwc: Path, bases_dir: Path, base: str, source_gw: Path |
                 raise SystemExit(f"Échec gwc, voir {log_path}")
 
 
-def run_gwu(gwu: Path, bases_dir: Path, base: str, out_file: Path, out_dir: Path | None) -> Tuple[Path, Path | None, Path]:
+def run_gwu(
+    gwu: Path,
+    bases_dir: Path,
+    base: str,
+    out_file: Path,
+    out_dir: Path | None,
+    extra_args: Optional[List[str]] = None,
+) -> Tuple[Path, Path | None, Path]:
     stderr_path = bases_dir / f"{base}.gwu.stderr"
     cmd = [str(gwu), str(bases_dir / base), "-v", "-o", str(out_file)]
     if out_dir is not None:
@@ -90,6 +97,8 @@ def run_gwu(gwu: Path, bases_dir: Path, base: str, out_file: Path, out_dir: Path
             shutil.rmtree(out_dir)
         ensure_dir(out_dir)
         cmd += ["-odir", str(out_dir)]
+    if extra_args:
+        cmd += extra_args
     with stderr_path.open("w", encoding="utf-8") as errf:
         proc = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=errf)
     if proc.returncode != 0:
@@ -97,7 +106,25 @@ def run_gwu(gwu: Path, bases_dir: Path, base: str, out_file: Path, out_dir: Path
     return out_file, out_dir, stderr_path
 
 
-def cmd_record(base: str, dist_dir: Path, ignore_trailing_space: bool) -> None:
+def build_scenario_suffix(charset: Optional[str], raw: bool) -> str:
+    parts: List[str] = []
+    if charset:
+        parts.append(f"charset-{charset}")
+    if raw:
+        parts.append("raw")
+    return ("." + ".".join(parts)) if parts else ""
+
+
+def gwu_extra_args(charset: Optional[str], raw: bool) -> List[str]:
+    args: List[str] = []
+    if charset:
+        args += ["-charset", charset]
+    if raw:
+        args += ["-raw"]
+    return args
+
+
+def cmd_record(base: str, dist_dir: Path, ignore_trailing_space: bool, charset: Optional[str], raw: bool) -> None:
     gwu, gwc = find_bins(dist_dir)
     bases_dir = dist_dir / "bases"
     golden_dir = Path("test") / "golden" / base
@@ -108,40 +135,44 @@ def cmd_record(base: str, dist_dir: Path, ignore_trailing_space: bool) -> None:
     build_gwb_if_needed(gwc, bases_dir, base, source_gw if source_gw.exists() else None)
 
     # Lancer deux exports: standard et avec -odir
-    std_out = bases_dir / f"{base}.golden.gw"
-    dir_out = bases_dir / f"{base}.dir.golden.gw"
-    outdir = bases_dir / f"outdir.{base}.golden"
+    suffix = build_scenario_suffix(charset, raw)
+    std_out = bases_dir / f"{base}{suffix}.golden.gw"
+    dir_out = bases_dir / f"{base}{suffix}.dir.golden.gw"
+    outdir = bases_dir / f"outdir.{base}{suffix}.golden"
+
+    extra = gwu_extra_args(charset, raw)
 
     # Export standard (+ capture logs)
-    _, _, std_stderr = run_gwu(gwu, bases_dir, base, std_out, None)
+    _, _, std_stderr = run_gwu(gwu, bases_dir, base, std_out, None, extra)
     # Sauvegarder les logs en golden
-    std_log_golden = golden_dir / f"{base}.golden.stderr"
+    std_log_golden = golden_dir / f"{base}{suffix}.golden.stderr"
     if std_stderr.exists():
         shutil.copy2(std_stderr, std_log_golden)
 
     # Export avec -odir (+ capture logs)
-    _, outdir_path, dir_stderr = run_gwu(gwu, bases_dir, base, dir_out, outdir)
+    _, outdir_path, dir_stderr = run_gwu(gwu, bases_dir, base, dir_out, outdir, extra)
 
     # Copier vers test/golden/BASE
-    shutil.copy2(std_out, golden_dir / f"{base}.golden.gw")
+    shutil.copy2(std_out, golden_dir / f"{base}{suffix}.golden.gw")
     if outdir_path and (outdir_path / f"{base}.gw").exists():
-        shutil.copy2(outdir_path / f"{base}.gw", golden_dir / f"{base}.dir.golden.gw")
+        shutil.copy2(outdir_path / f"{base}.gw", golden_dir / f"{base}{suffix}.dir.golden.gw")
     # Logs -odir
-    dir_log_golden = golden_dir / f"{base}.dir.golden.stderr"
+    dir_log_golden = golden_dir / f"{base}{suffix}.dir.golden.stderr"
     if dir_stderr.exists():
         shutil.copy2(dir_stderr, dir_log_golden)
 
     print(f"Golden enregistré dans {golden_dir}")
 
 
-def cmd_verify(base: str, dist_dir: Path, ignore_trailing_space: bool) -> int:
+def cmd_verify(base: str, dist_dir: Path, ignore_trailing_space: bool, charset: Optional[str], raw: bool) -> int:
     gwu, gwc = find_bins(dist_dir)
     bases_dir = dist_dir / "bases"
     golden_dir = Path("test") / "golden" / base
-    golden_std = golden_dir / f"{base}.golden.gw"
-    golden_dirfile = golden_dir / f"{base}.dir.golden.gw"
-    golden_std_log = golden_dir / f"{base}.golden.stderr"
-    golden_dir_log = golden_dir / f"{base}.dir.golden.stderr"
+    suffix = build_scenario_suffix(charset, raw)
+    golden_std = golden_dir / f"{base}{suffix}.golden.gw"
+    golden_dirfile = golden_dir / f"{base}{suffix}.dir.golden.gw"
+    golden_std_log = golden_dir / f"{base}{suffix}.golden.stderr"
+    golden_dir_log = golden_dir / f"{base}{suffix}.dir.golden.stderr"
     if not golden_std.exists():
         raise SystemExit(f"Golden manquant: {golden_std}")
 
@@ -150,18 +181,19 @@ def cmd_verify(base: str, dist_dir: Path, ignore_trailing_space: bool) -> int:
     build_gwb_if_needed(gwc, bases_dir, base, source_gw if source_gw.exists() else None)
 
     # Générer des sorties courantes
-    cur_std = bases_dir / f"{base}.current.gw"
-    cur_dir_marker = bases_dir / f"{base}.dir.current.gw"
-    cur_outdir = bases_dir / f"outdir.{base}.current"
-    _, _, cur_std_stderr = run_gwu(gwu, bases_dir, base, cur_std, None)
+    cur_std = bases_dir / f"{base}{suffix}.current.gw"
+    cur_dir_marker = bases_dir / f"{base}{suffix}.dir.current.gw"
+    cur_outdir = bases_dir / f"outdir.{base}{suffix}.current"
+    extra = gwu_extra_args(charset, raw)
+    _, _, cur_std_stderr = run_gwu(gwu, bases_dir, base, cur_std, None, extra)
     # Sauvegarder une copie distincte des logs courants (standard)
-    cur_std_log = bases_dir / f"{base}.golden_verify.stderr"
+    cur_std_log = bases_dir / f"{base}{suffix}.golden_verify.stderr"
     if cur_std_stderr.exists():
         shutil.copy2(cur_std_stderr, cur_std_log)
 
-    _, cur_outdir, cur_dir_stderr = run_gwu(gwu, bases_dir, base, cur_dir_marker, cur_outdir)
+    _, cur_outdir, cur_dir_stderr = run_gwu(gwu, bases_dir, base, cur_dir_marker, cur_outdir, extra)
     # Sauvegarder logs -odir
-    cur_dir_log = bases_dir / f"{base}.dir.golden_verify.stderr"
+    cur_dir_log = bases_dir / f"{base}{suffix}.dir.golden_verify.stderr"
     if cur_dir_stderr.exists():
         shutil.copy2(cur_dir_stderr, cur_dir_log)
 
@@ -229,6 +261,8 @@ def main(argv: List[str]) -> int:
         action="store_true",
         help="Ne pas ignorer les espaces de fin de ligne dans les diff",
     )
+    common.add_argument("--charset", choices=["ASCII", "ANSEL", "ANSI", "UTF-8"], help="Forcer l'encodage de sortie")
+    common.add_argument("--raw", action="store_true", help="Sortie brute (sans conversion UTF-8)")
 
     rec = sub.add_parser("record", parents=[common], help="Enregistrer un golden pour la base")
     ver = sub.add_parser("verify", parents=[common], help="Vérifier la base contre le golden")
@@ -238,10 +272,10 @@ def main(argv: List[str]) -> int:
     ignore_trailing_space = not args.no_ignore_trailing_space
 
     if args.cmd == "record":
-        cmd_record(args.base, dist_dir, ignore_trailing_space)
+        cmd_record(args.base, dist_dir, ignore_trailing_space, args.charset, args.raw)
         return 0
     if args.cmd == "verify":
-        return cmd_verify(args.base, dist_dir, ignore_trailing_space)
+        return cmd_verify(args.base, dist_dir, ignore_trailing_space, args.charset, args.raw)
     return 2
 
 
