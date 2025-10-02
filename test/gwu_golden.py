@@ -123,6 +123,13 @@ def build_scenario_suffix(
     all_files: bool,
     nopicture: bool,
     picture_path: bool,
+    source: Optional[str],
+    censor: Optional[int],
+    sep: Optional[List[str]],
+    sep_limit: Optional[int],
+    sep_only_file: Optional[str],
+    old_gw: bool,
+    mem: bool,
 ) -> str:
     parts: List[str] = []
     if charset:
@@ -153,6 +160,20 @@ def build_scenario_suffix(
         parts.append("nopicture")
     if picture_path:
         parts.append("picture_path")
+    if source:
+        parts.append(f"source-{source.replace(' ', '_')}")
+    if censor is not None:
+        parts.append(f"c{censor}")
+    if sep:
+        parts.append(f"sep-{len(sep)}")
+    if sep_limit is not None:
+        parts.append(f"seplimit{sep_limit}")
+    if sep_only_file:
+        parts.append(f"sepfile")
+    if old_gw:
+        parts.append("old_gw")
+    if mem:
+        parts.append("mem")
     return ("." + ".".join(parts)) if parts else ""
 
 
@@ -171,6 +192,13 @@ def gwu_extra_args(
     all_files: bool,
     nopicture: bool,
     picture_path: bool,
+    source: Optional[str],
+    censor: Optional[int],
+    sep: Optional[List[str]],
+    sep_limit: Optional[int],
+    sep_only_file: Optional[str],
+    old_gw: bool,
+    mem: bool,
 ) -> List[str]:
     args: List[str] = []
     if charset:
@@ -203,6 +231,21 @@ def gwu_extra_args(
         args += ["-nopicture"]
     if picture_path:
         args += ["-picture-path"]
+    if source:
+        args += ["-source", source]
+    if censor is not None:
+        args += ["-c", str(censor)]
+    if sep:
+        for s in sep:
+            args += ["-sep", s]
+    if sep_limit is not None:
+        args += ["-sep_limit", str(sep_limit)]
+    if sep_only_file:
+        args += ["-sep_only_file", sep_only_file]
+    if old_gw:
+        args += ["-old_gw"]
+    if mem:
+        args += ["-mem"]
     return args
 
 
@@ -224,6 +267,13 @@ def cmd_record(
     all_files: bool,
     nopicture: bool,
     picture_path: bool,
+    source: Optional[str],
+    censor: Optional[int],
+    sep: Optional[List[str]],
+    sep_limit: Optional[int],
+    sep_only_file: Optional[str],
+    old_gw: bool,
+    mem: bool,
 ) -> None:
     gwu, gwc = find_bins(dist_dir)
     bases_dir = dist_dir / "bases"
@@ -235,15 +285,15 @@ def cmd_record(
     build_gwb_if_needed(gwc, bases_dir, base, source_gw if source_gw.exists() else None)
 
     # Lancer deux exports: standard et avec -odir
-    suffix = build_scenario_suffix(charset, raw, surnames, keys, asc, desc, asc_desc, parentship, isolated, nn, nnn, all_files, nopicture, picture_path)
+    suffix = build_scenario_suffix(charset, raw, surnames, keys, asc, desc, asc_desc, parentship, isolated, nn, nnn, all_files, nopicture, picture_path, source, censor, sep, sep_limit, sep_only_file, old_gw, mem)
     std_out = bases_dir / f"{base}{suffix}.golden.gw"
     dir_out = bases_dir / f"{base}{suffix}.dir.golden.gw"
     outdir = bases_dir / f"outdir.{base}{suffix}.golden"
 
-    extra = gwu_extra_args(charset, raw, surnames, keys, asc, desc, asc_desc, parentship, isolated, nn, nnn, all_files, nopicture, picture_path)
+    extra = gwu_extra_args(charset, raw, surnames, keys, asc, desc, asc_desc, parentship, isolated, nn, nnn, all_files, nopicture, picture_path, source, censor, sep, sep_limit, sep_only_file, old_gw, mem)
 
     # Contexte scénario
-    print(f"Scenario: base={base} charset={charset or 'default'} raw={raw} surnames={surnames} keys={keys} a={asc} d={desc} ad={asc_desc} parentship={parentship} isolated={isolated} nn={nn} nnn={nnn} all_files={all_files} nopicture={nopicture} picture_path={picture_path}")
+    print(f"Scenario: base={base} source={source} c={censor} sep={sep} sep_limit={sep_limit} sep_only_file={sep_only_file} old_gw={old_gw} mem={mem}")
 
     # Export standard (+ capture logs)
     _, _, std_stderr = run_gwu(gwu, bases_dir, base, std_out, None, extra)
@@ -285,11 +335,18 @@ def cmd_verify(
     all_files: bool,
     nopicture: bool,
     picture_path: bool,
+    source: Optional[str],
+    censor: Optional[int],
+    sep: Optional[List[str]],
+    sep_limit: Optional[int],
+    sep_only_file: Optional[str],
+    old_gw: bool,
+    mem: bool,
 ) -> int:
     gwu, gwc = find_bins(dist_dir)
     bases_dir = dist_dir / "bases"
     golden_dir = Path("test") / "golden" / base
-    suffix = build_scenario_suffix(charset, raw, surnames, keys, asc, desc, asc_desc, parentship, isolated, nn, nnn, all_files, nopicture, picture_path)
+    suffix = build_scenario_suffix(charset, raw, surnames, keys, asc, desc, asc_desc, parentship, isolated, nn, nnn, all_files, nopicture, picture_path, source, censor, sep, sep_limit, sep_only_file, old_gw, mem)
     golden_std = golden_dir / f"{base}{suffix}.golden.gw"
     golden_dirfile = golden_dir / f"{base}{suffix}.dir.golden.gw"
     golden_std_log = golden_dir / f"{base}{suffix}.golden.stderr"
@@ -305,8 +362,8 @@ def cmd_verify(
     cur_std = bases_dir / f"{base}{suffix}.current.gw"
     cur_dir_marker = bases_dir / f"{base}{suffix}.dir.current.gw"
     cur_outdir = bases_dir / f"outdir.{base}{suffix}.current"
-    extra = gwu_extra_args(charset, raw, surnames, keys, asc, desc, asc_desc, parentship, isolated, nn, nnn, all_files, nopicture, picture_path)
-    print(f"Scenario: base={base} charset={charset or 'default'} raw={raw} surnames={surnames} keys={keys} a={asc} d={desc} ad={asc_desc} parentship={parentship} isolated={isolated} nn={nn} nnn={nnn} all_files={all_files} nopicture={nopicture} picture_path={picture_path}")
+    extra = gwu_extra_args(charset, raw, surnames, keys, asc, desc, asc_desc, parentship, isolated, nn, nnn, all_files, nopicture, picture_path, source, censor, sep, sep_limit, sep_only_file, old_gw, mem)
+    print(f"Scenario: base={base} source={source} c={censor} sep={sep} sep_limit={sep_limit} sep_only_file={sep_only_file} old_gw={old_gw} mem={mem}")
     _, _, cur_std_stderr = run_gwu(gwu, bases_dir, base, cur_std, None, extra)
     # Sauvegarder une copie distincte des logs courants (standard)
     cur_std_log = bases_dir / f"{base}{suffix}.golden_verify.stderr"
@@ -397,6 +454,13 @@ def main(argv: List[str]) -> int:
     common.add_argument("--all-files", action="store_true", dest="all_files", help="Tout le contenu notes_d")
     common.add_argument("--nopicture", action="store_true", help="Ne pas extraire les images")
     common.add_argument("--picture-path", action="store_true", dest="picture_path", help="Extraire chemins d'images")
+    common.add_argument("--source", help="Remplacer sources individus/familles")
+    common.add_argument("-c", "--censor", type=int, help="Censure par âge (années)")
+    common.add_argument("--sep", action="append", help="Séparer une personne (avec -odir, répétable)")
+    common.add_argument("--sep-limit", type=int, dest="sep_limit", help="Seuil de regroupement pour -sep")
+    common.add_argument("--sep-only-file", dest="sep_only_file", help="Fichier cible pour -sep")
+    common.add_argument("--old-gw", action="store_true", dest="old_gw", help="Format ancien (< 7.00)")
+    common.add_argument("--mem", action="store_true", help="Mode économie mémoire")
 
     rec = sub.add_parser("record", parents=[common], help="Enregistrer un golden pour la base")
     ver = sub.add_parser("verify", parents=[common], help="Vérifier la base contre le golden")
@@ -424,6 +488,13 @@ def main(argv: List[str]) -> int:
             args.all_files,
             args.nopicture,
             args.picture_path,
+            args.source,
+            args.censor,
+            args.sep,
+            args.sep_limit,
+            args.sep_only_file,
+            args.old_gw,
+            args.mem,
         )
         return 0
     if args.cmd == "verify":
@@ -445,6 +516,13 @@ def main(argv: List[str]) -> int:
             args.all_files,
             args.nopicture,
             args.picture_path,
+            args.source,
+            args.censor,
+            args.sep,
+            args.sep_limit,
+            args.sep_only_file,
+            args.old_gw,
+            args.mem,
         )
     return 2
 
