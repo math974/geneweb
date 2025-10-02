@@ -118,6 +118,11 @@ def build_scenario_suffix(
     asc_desc: Optional[int],
     parentship: bool,
     isolated: bool,
+    nn: bool,
+    nnn: bool,
+    all_files: bool,
+    nopicture: bool,
+    picture_path: bool,
 ) -> str:
     parts: List[str] = []
     if charset:
@@ -138,6 +143,16 @@ def build_scenario_suffix(
         parts.append("parentship")
     if isolated:
         parts.append("isolated")
+    if nn:
+        parts.append("nn")
+    if nnn:
+        parts.append("nnn")
+    if all_files:
+        parts.append("all_files")
+    if nopicture:
+        parts.append("nopicture")
+    if picture_path:
+        parts.append("picture_path")
     return ("." + ".".join(parts)) if parts else ""
 
 
@@ -151,6 +166,11 @@ def gwu_extra_args(
     asc_desc: Optional[int],
     parentship: bool,
     isolated: bool,
+    nn: bool,
+    nnn: bool,
+    all_files: bool,
+    nopicture: bool,
+    picture_path: bool,
 ) -> List[str]:
     args: List[str] = []
     if charset:
@@ -173,6 +193,16 @@ def gwu_extra_args(
         args += ["-parentship"]
     if isolated:
         args += ["-isolated"]
+    if nn:
+        args += ["-nn"]
+    if nnn:
+        args += ["-nnn"]
+    if all_files:
+        args += ["-all_files"]
+    if nopicture:
+        args += ["-nopicture"]
+    if picture_path:
+        args += ["-picture-path"]
     return args
 
 
@@ -189,6 +219,11 @@ def cmd_record(
     asc_desc: Optional[int],
     parentship: bool,
     isolated: bool,
+    nn: bool,
+    nnn: bool,
+    all_files: bool,
+    nopicture: bool,
+    picture_path: bool,
 ) -> None:
     gwu, gwc = find_bins(dist_dir)
     bases_dir = dist_dir / "bases"
@@ -200,15 +235,15 @@ def cmd_record(
     build_gwb_if_needed(gwc, bases_dir, base, source_gw if source_gw.exists() else None)
 
     # Lancer deux exports: standard et avec -odir
-    suffix = build_scenario_suffix(charset, raw, surnames, keys, asc, desc, asc_desc, parentship, isolated)
+    suffix = build_scenario_suffix(charset, raw, surnames, keys, asc, desc, asc_desc, parentship, isolated, nn, nnn, all_files, nopicture, picture_path)
     std_out = bases_dir / f"{base}{suffix}.golden.gw"
     dir_out = bases_dir / f"{base}{suffix}.dir.golden.gw"
     outdir = bases_dir / f"outdir.{base}{suffix}.golden"
 
-    extra = gwu_extra_args(charset, raw, surnames, keys, asc, desc, asc_desc, parentship, isolated)
+    extra = gwu_extra_args(charset, raw, surnames, keys, asc, desc, asc_desc, parentship, isolated, nn, nnn, all_files, nopicture, picture_path)
 
     # Contexte scénario
-    print(f"Scenario: base={base} charset={charset or 'default'} raw={raw} surnames={surnames} keys={keys} a={asc} d={desc} ad={asc_desc} parentship={parentship} isolated={isolated}")
+    print(f"Scenario: base={base} charset={charset or 'default'} raw={raw} surnames={surnames} keys={keys} a={asc} d={desc} ad={asc_desc} parentship={parentship} isolated={isolated} nn={nn} nnn={nnn} all_files={all_files} nopicture={nopicture} picture_path={picture_path}")
 
     # Export standard (+ capture logs)
     _, _, std_stderr = run_gwu(gwu, bases_dir, base, std_out, None, extra)
@@ -245,11 +280,16 @@ def cmd_verify(
     asc_desc: Optional[int],
     parentship: bool,
     isolated: bool,
+    nn: bool,
+    nnn: bool,
+    all_files: bool,
+    nopicture: bool,
+    picture_path: bool,
 ) -> int:
     gwu, gwc = find_bins(dist_dir)
     bases_dir = dist_dir / "bases"
     golden_dir = Path("test") / "golden" / base
-    suffix = build_scenario_suffix(charset, raw, surnames, keys, asc, desc, asc_desc, parentship, isolated)
+    suffix = build_scenario_suffix(charset, raw, surnames, keys, asc, desc, asc_desc, parentship, isolated, nn, nnn, all_files, nopicture, picture_path)
     golden_std = golden_dir / f"{base}{suffix}.golden.gw"
     golden_dirfile = golden_dir / f"{base}{suffix}.dir.golden.gw"
     golden_std_log = golden_dir / f"{base}{suffix}.golden.stderr"
@@ -265,8 +305,8 @@ def cmd_verify(
     cur_std = bases_dir / f"{base}{suffix}.current.gw"
     cur_dir_marker = bases_dir / f"{base}{suffix}.dir.current.gw"
     cur_outdir = bases_dir / f"outdir.{base}{suffix}.current"
-    extra = gwu_extra_args(charset, raw, surnames, keys, asc, desc, asc_desc, parentship, isolated)
-    print(f"Scenario: base={base} charset={charset or 'default'} raw={raw} surnames={surnames} keys={keys} a={asc} d={desc} ad={asc_desc} parentship={parentship} isolated={isolated}")
+    extra = gwu_extra_args(charset, raw, surnames, keys, asc, desc, asc_desc, parentship, isolated, nn, nnn, all_files, nopicture, picture_path)
+    print(f"Scenario: base={base} charset={charset or 'default'} raw={raw} surnames={surnames} keys={keys} a={asc} d={desc} ad={asc_desc} parentship={parentship} isolated={isolated} nn={nn} nnn={nnn} all_files={all_files} nopicture={nopicture} picture_path={picture_path}")
     _, _, cur_std_stderr = run_gwu(gwu, bases_dir, base, cur_std, None, extra)
     # Sauvegarder une copie distincte des logs courants (standard)
     cur_std_log = bases_dir / f"{base}{suffix}.golden_verify.stderr"
@@ -352,6 +392,11 @@ def main(argv: List[str]) -> int:
     common.add_argument("--ad", type=int, help="Profondeur ascendance+descendance")
     common.add_argument("--parentship", action="store_true", help="Sélection par liens de parenté (avec paires de -k)")
     common.add_argument("--isolated", action="store_true", help="Inclure personnes isolées")
+    common.add_argument("--nn", action="store_true", help="Pas de notes de base")
+    common.add_argument("--nnn", action="store_true", help="Aucune note")
+    common.add_argument("--all-files", action="store_true", dest="all_files", help="Tout le contenu notes_d")
+    common.add_argument("--nopicture", action="store_true", help="Ne pas extraire les images")
+    common.add_argument("--picture-path", action="store_true", dest="picture_path", help="Extraire chemins d'images")
 
     rec = sub.add_parser("record", parents=[common], help="Enregistrer un golden pour la base")
     ver = sub.add_parser("verify", parents=[common], help="Vérifier la base contre le golden")
@@ -374,6 +419,11 @@ def main(argv: List[str]) -> int:
             args.ad,
             args.parentship,
             args.isolated,
+            args.nn,
+            args.nnn,
+            args.all_files,
+            args.nopicture,
+            args.picture_path,
         )
         return 0
     if args.cmd == "verify":
@@ -390,6 +440,11 @@ def main(argv: List[str]) -> int:
             args.ad,
             args.parentship,
             args.isolated,
+            args.nn,
+            args.nnn,
+            args.all_files,
+            args.nopicture,
+            args.picture_path,
         )
     return 2
 
