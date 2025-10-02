@@ -99,6 +99,8 @@ def run_gwu(
         cmd += ["-odir", str(out_dir)]
     if extra_args:
         cmd += extra_args
+    # Afficher la commande exacte pour traçabilité
+    print("RUN:", " ".join(cmd))
     with stderr_path.open("w", encoding="utf-8") as errf:
         proc = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=errf)
     if proc.returncode != 0:
@@ -106,25 +108,88 @@ def run_gwu(
     return out_file, out_dir, stderr_path
 
 
-def build_scenario_suffix(charset: Optional[str], raw: bool) -> str:
+def build_scenario_suffix(
+    charset: Optional[str],
+    raw: bool,
+    surnames: Optional[List[str]],
+    keys: Optional[List[str]],
+    asc: Optional[int],
+    desc: Optional[int],
+    asc_desc: Optional[int],
+    parentship: bool,
+    isolated: bool,
+) -> str:
     parts: List[str] = []
     if charset:
         parts.append(f"charset-{charset}")
     if raw:
         parts.append("raw")
+    if surnames:
+        parts.append(f"s-{'-'.join(s.replace(' ', '_') for s in surnames)}")
+    if keys:
+        parts.append(f"key-{len(keys)}")
+    if asc is not None:
+        parts.append(f"a{asc}")
+    if desc is not None:
+        parts.append(f"d{desc}")
+    if asc_desc is not None:
+        parts.append(f"ad{asc_desc}")
+    if parentship:
+        parts.append("parentship")
+    if isolated:
+        parts.append("isolated")
     return ("." + ".".join(parts)) if parts else ""
 
 
-def gwu_extra_args(charset: Optional[str], raw: bool) -> List[str]:
+def gwu_extra_args(
+    charset: Optional[str],
+    raw: bool,
+    surnames: Optional[List[str]],
+    keys: Optional[List[str]],
+    asc: Optional[int],
+    desc: Optional[int],
+    asc_desc: Optional[int],
+    parentship: bool,
+    isolated: bool,
+) -> List[str]:
     args: List[str] = []
     if charset:
         args += ["-charset", charset]
     if raw:
         args += ["-raw"]
+    if surnames:
+        for s in surnames:
+            args += ["-s", s]
+    if keys:
+        for k in keys:
+            args += ["-key", k]
+    if asc is not None:
+        args += ["-a", str(asc)]
+    if desc is not None:
+        args += ["-d", str(desc)]
+    if asc_desc is not None:
+        args += ["-ad", str(asc_desc)]
+    if parentship:
+        args += ["-parentship"]
+    if isolated:
+        args += ["-isolated"]
     return args
 
 
-def cmd_record(base: str, dist_dir: Path, ignore_trailing_space: bool, charset: Optional[str], raw: bool) -> None:
+def cmd_record(
+    base: str,
+    dist_dir: Path,
+    ignore_trailing_space: bool,
+    charset: Optional[str],
+    raw: bool,
+    surnames: Optional[List[str]],
+    keys: Optional[List[str]],
+    asc: Optional[int],
+    desc: Optional[int],
+    asc_desc: Optional[int],
+    parentship: bool,
+    isolated: bool,
+) -> None:
     gwu, gwc = find_bins(dist_dir)
     bases_dir = dist_dir / "bases"
     golden_dir = Path("test") / "golden" / base
@@ -135,12 +200,15 @@ def cmd_record(base: str, dist_dir: Path, ignore_trailing_space: bool, charset: 
     build_gwb_if_needed(gwc, bases_dir, base, source_gw if source_gw.exists() else None)
 
     # Lancer deux exports: standard et avec -odir
-    suffix = build_scenario_suffix(charset, raw)
+    suffix = build_scenario_suffix(charset, raw, surnames, keys, asc, desc, asc_desc, parentship, isolated)
     std_out = bases_dir / f"{base}{suffix}.golden.gw"
     dir_out = bases_dir / f"{base}{suffix}.dir.golden.gw"
     outdir = bases_dir / f"outdir.{base}{suffix}.golden"
 
-    extra = gwu_extra_args(charset, raw)
+    extra = gwu_extra_args(charset, raw, surnames, keys, asc, desc, asc_desc, parentship, isolated)
+
+    # Contexte scénario
+    print(f"Scenario: base={base} charset={charset or 'default'} raw={raw} surnames={surnames} keys={keys} a={asc} d={desc} ad={asc_desc} parentship={parentship} isolated={isolated}")
 
     # Export standard (+ capture logs)
     _, _, std_stderr = run_gwu(gwu, bases_dir, base, std_out, None, extra)
@@ -164,11 +232,24 @@ def cmd_record(base: str, dist_dir: Path, ignore_trailing_space: bool, charset: 
     print(f"Golden enregistré dans {golden_dir}")
 
 
-def cmd_verify(base: str, dist_dir: Path, ignore_trailing_space: bool, charset: Optional[str], raw: bool) -> int:
+def cmd_verify(
+    base: str,
+    dist_dir: Path,
+    ignore_trailing_space: bool,
+    charset: Optional[str],
+    raw: bool,
+    surnames: Optional[List[str]],
+    keys: Optional[List[str]],
+    asc: Optional[int],
+    desc: Optional[int],
+    asc_desc: Optional[int],
+    parentship: bool,
+    isolated: bool,
+) -> int:
     gwu, gwc = find_bins(dist_dir)
     bases_dir = dist_dir / "bases"
     golden_dir = Path("test") / "golden" / base
-    suffix = build_scenario_suffix(charset, raw)
+    suffix = build_scenario_suffix(charset, raw, surnames, keys, asc, desc, asc_desc, parentship, isolated)
     golden_std = golden_dir / f"{base}{suffix}.golden.gw"
     golden_dirfile = golden_dir / f"{base}{suffix}.dir.golden.gw"
     golden_std_log = golden_dir / f"{base}{suffix}.golden.stderr"
@@ -184,7 +265,8 @@ def cmd_verify(base: str, dist_dir: Path, ignore_trailing_space: bool, charset: 
     cur_std = bases_dir / f"{base}{suffix}.current.gw"
     cur_dir_marker = bases_dir / f"{base}{suffix}.dir.current.gw"
     cur_outdir = bases_dir / f"outdir.{base}{suffix}.current"
-    extra = gwu_extra_args(charset, raw)
+    extra = gwu_extra_args(charset, raw, surnames, keys, asc, desc, asc_desc, parentship, isolated)
+    print(f"Scenario: base={base} charset={charset or 'default'} raw={raw} surnames={surnames} keys={keys} a={asc} d={desc} ad={asc_desc} parentship={parentship} isolated={isolated}")
     _, _, cur_std_stderr = run_gwu(gwu, bases_dir, base, cur_std, None, extra)
     # Sauvegarder une copie distincte des logs courants (standard)
     cur_std_log = bases_dir / f"{base}{suffix}.golden_verify.stderr"
@@ -263,6 +345,13 @@ def main(argv: List[str]) -> int:
     )
     common.add_argument("--charset", choices=["ASCII", "ANSEL", "ANSI", "UTF-8"], help="Forcer l'encodage de sortie")
     common.add_argument("--raw", action="store_true", help="Sortie brute (sans conversion UTF-8)")
+    common.add_argument("-s", "--surname", action="append", dest="surnames", help="Sélectionner un patronyme (répétable)")
+    common.add_argument("-k", "--key", action="append", dest="keys", help="Clé de personne (répétable)")
+    common.add_argument("-a", "--asc", type=int, help="Profondeur ascendance")
+    common.add_argument("-d", "--desc", type=int, help="Profondeur descendance")
+    common.add_argument("--ad", type=int, help="Profondeur ascendance+descendance")
+    common.add_argument("--parentship", action="store_true", help="Sélection par liens de parenté (avec paires de -k)")
+    common.add_argument("--isolated", action="store_true", help="Inclure personnes isolées")
 
     rec = sub.add_parser("record", parents=[common], help="Enregistrer un golden pour la base")
     ver = sub.add_parser("verify", parents=[common], help="Vérifier la base contre le golden")
@@ -272,10 +361,36 @@ def main(argv: List[str]) -> int:
     ignore_trailing_space = not args.no_ignore_trailing_space
 
     if args.cmd == "record":
-        cmd_record(args.base, dist_dir, ignore_trailing_space, args.charset, args.raw)
+        cmd_record(
+            args.base,
+            dist_dir,
+            ignore_trailing_space,
+            args.charset,
+            args.raw,
+            args.surnames,
+            args.keys,
+            args.asc,
+            args.desc,
+            args.ad,
+            args.parentship,
+            args.isolated,
+        )
         return 0
     if args.cmd == "verify":
-        return cmd_verify(args.base, dist_dir, ignore_trailing_space, args.charset, args.raw)
+        return cmd_verify(
+            args.base,
+            dist_dir,
+            ignore_trailing_space,
+            args.charset,
+            args.raw,
+            args.surnames,
+            args.keys,
+            args.asc,
+            args.desc,
+            args.ad,
+            args.parentship,
+            args.isolated,
+        )
     return 2
 
 
