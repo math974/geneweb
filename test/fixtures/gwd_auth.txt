@@ -1,0 +1,7 @@
+# Fichier d'autorisation pour les tests gwd
+# Format: username:password
+
+testuser:testpass
+friend:friendpass
+wizard:wizardpass
+admin:admin123 
