@@ -446,7 +446,7 @@ def main(argv: List[str]) -> int:
     common.add_argument("-k", "--key", action="append", dest="keys", help="Clé de personne (répétable)")
     common.add_argument("-a", "--asc", type=int, help="Profondeur ascendance")
     common.add_argument("-d", "--desc", type=int, help="Profondeur descendance")
-    common.add_argument("--ad", type=int, help="Profondeur ascendance+descendance")
+    common.add_argument("-ad", type=int, dest="ad", help="Profondeur ascendance+descendance")
     common.add_argument("--parentship", action="store_true", help="Sélection par liens de parenté (avec paires de -k)")
     common.add_argument("--isolated", action="store_true", help="Inclure personnes isolées")
     common.add_argument("--nn", action="store_true", help="Pas de notes de base")
