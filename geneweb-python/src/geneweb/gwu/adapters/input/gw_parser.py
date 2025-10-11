@@ -15,6 +15,7 @@ from geneweb.gwu.domain.entities import (
     Note,
     Source,
 )
+from geneweb.gwu.adapters.input.date_parser import DateParser
 
 
 @dataclass
@@ -215,15 +216,25 @@ class GwParser:
             if line == "end fevt":
                 return idx + 1
             
-            # Mariage
-            if line.startswith("#marr"):
-                # TODO: Parser date et lieu
-                pass
-            
-            # Divorce
-            if line.startswith("#div"):
-                # TODO: Parser date et lieu
-                pass
+            # Parser les événements
+            if line.startswith("#"):
+                event = self._parse_event_line(line)
+                if event:
+                    # Associer l'événement à la famille
+                    if event.event_type == EventType.MARRIAGE:
+                        family.marriage = event
+                    elif event.event_type == EventType.DIVORCE:
+                        family.divorce = event
+                    elif event.event_type == EventType.ENGAGEMENT:
+                        family.engagement = event
+                    elif event.event_type == EventType.MARRIAGE_CONTRACT:
+                        family.marriage_contract = event
+                    elif event.event_type == EventType.SEPARATED:
+                        family.separated = event
+                    elif event.event_type == EventType.ANNULMENT:
+                        family.annulment = event
+                    else:
+                        family.events.append(event)
             
             idx += 1
         
@@ -383,7 +394,8 @@ class GwParser:
         # Extraire nom de la personne
         person_name = line[5:].strip()  # Enlever "pevt "
         
-        # TODO: Trouver la personne dans la base et ajouter les événements
+        # Trouver la personne dans la base
+        person = self._find_person_by_name(person_name)
         
         idx = start_idx + 1
         while idx < len(lines):
@@ -392,12 +404,142 @@ class GwParser:
             if line == "end pevt":
                 return idx + 1
             
-            # Événements (#birt, #deat, etc.)
-            # TODO: Parser les événements
+            # Parser les événements
+            if person and line.startswith("#"):
+                event = self._parse_event_line(line)
+                if event:
+                    # Associer l'événement à la personne
+                    if event.event_type == EventType.BIRTH:
+                        person.birth = event
+                    elif event.event_type == EventType.BAPTISM:
+                        person.baptism = event
+                    elif event.event_type == EventType.DEATH:
+                        person.death = event
+                    elif event.event_type == EventType.BURIAL:
+                        person.burial = event
+                    elif event.event_type == EventType.CREMATION:
+                        person.cremation = event
+                    else:
+                        person.events.append(event)
             
             idx += 1
         
         return idx
+    
+    def _find_person_by_name(self, name: str) -> Optional[Person]:
+        """
+        Trouve une personne par son nom complet (Nom Prénom.occ).
+        
+        Args:
+            name: Nom complet "Nom Prénom" ou "Nom Prénom.occ"
+        
+        Returns:
+            Person trouvée ou None
+        """
+        # Parser le nom
+        tokens = name.split()
+        if len(tokens) < 2:
+            return None
+        
+        surname = tokens[0]
+        first_name_with_occ = tokens[1]
+        
+        # Séparer prénom et occurrence
+        if "." in first_name_with_occ:
+            parts = first_name_with_occ.split(".")
+            first_name = parts[0].replace("_", " ")
+            try:
+                occ = int(parts[1])
+            except (ValueError, IndexError):
+                occ = 0
+        else:
+            first_name = first_name_with_occ.replace("_", " ")
+            occ = 0
+        
+        # Chercher dans la base
+        for person in self.database.persons.values():
+            if (person.surname == surname and 
+                person.first_name == first_name and 
+                person.occ == occ):
+                return person
+        
+        return None
+    
+    def _parse_event_line(self, line: str) -> Optional[Event]:
+        """
+        Parse une ligne d'événement (#birt, #deat, etc.).
+        
+        Args:
+            line: Ligne commençant par # (ex: "#birt 1789 #p Paris")
+        
+        Returns:
+            Event parsé ou None
+        """
+        # Mapping des tags vers EventType
+        event_map = {
+            "#birt": EventType.BIRTH,
+            "#bapm": EventType.BAPTISM,
+            "#deat": EventType.DEATH,
+            "#buri": EventType.BURIAL,
+            "#crem": EventType.CREMATION,
+            "#marr": EventType.MARRIAGE,
+            "#div": EventType.DIVORCE,
+            "#enga": EventType.ENGAGEMENT,
+        }
+        
+        # Trouver le type d'événement
+        event_type = None
+        for tag, etype in event_map.items():
+            if line.startswith(tag):
+                event_type = etype
+                line = line[len(tag):].strip()
+                break
+        
+        if not event_type:
+            return None
+        
+        # Parser les attributs de l'événement
+        date = None
+        place = None
+        source = None
+        
+        # Split par # pour trouver les attributs
+        parts = line.split("#")
+        
+        # Première partie = date (si présente)
+        if parts[0].strip():
+            date = DateParser.parse(parts[0].strip())
+        
+        # Parser les autres attributs
+        for part in parts[1:]:
+            part = part.strip()
+            if part.startswith("p "):
+                # Lieu
+                place_str = part[2:].strip()
+                place = Place(name=place_str)
+            elif part.startswith("s "):
+                # Source
+                source_str = part[2:].strip()
+                source = source_str
+            elif part.startswith("bp "):
+                # Birth place
+                place_str = part[3:].strip()
+                place = Place(name=place_str)
+            elif part.startswith("dp "):
+                # Death place
+                place_str = part[3:].strip()
+                place = Place(name=place_str)
+            elif part.startswith("mp "):
+                # Marriage place
+                place_str = part[3:].strip()
+                place = Place(name=place_str)
+        
+        return Event(
+            event_type=event_type,
+            date=date,
+            place=place,
+            source=source,
+        )
     
     def _parse_notes(self, lines: List[str], start_idx: int) -> int:
         """Parse les notes d'une personne."""
