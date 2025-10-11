@@ -30,6 +30,7 @@ class GwDatabase:
     persons: Dict[str, Person] = field(default_factory=dict)
     families: List[Family] = field(default_factory=list)
     notes_map: Dict[str, str] = field(default_factory=dict)  # key -> note content
+    person_key_index: Dict[tuple, str] = field(default_factory=dict)  # (first_name, surname, occ) -> person_id
 
 
 class GwParser:
@@ -279,6 +280,55 @@ class GwParser:
         
         return idx
     
+    def _get_or_create_person(
+        self, first_name: str, surname: str, occ: int, sex: Sex
+    ) -> Person:
+        """
+        Récupère une personne existante ou en crée une nouvelle (déduplication).
+        
+        Utilise l'index par clé (first_name, surname, occ) pour éviter les doublons.
+        
+        Args:
+            first_name: Prénom
+            surname: Nom de famille
+            occ: Occurrence
+            sex: Sexe
+        
+        Returns:
+            Person (existante ou nouvellement créée)
+        """
+        # Créer la clé de recherche
+        key = (first_name, surname, occ)
+        
+        # Vérifier si la personne existe déjà
+        if key in self.database.person_key_index:
+            person_id = self.database.person_key_index[key]
+            person = self.database.persons[person_id]
+            
+            # Mettre à jour le sexe si nécessaire (si c'était UNKNOWN)
+            if person.sex == Sex.UNKNOWN and sex != Sex.UNKNOWN:
+                person.sex = sex
+            
+            return person
+        
+        # Créer une nouvelle personne
+        person_id = f"P{self.person_counter}"
+        self.person_counter += 1
+        
+        person = Person(
+            person_id=person_id,
+            first_name=first_name,
+            surname=surname,
+            occ=occ,
+            sex=sex,
+        )
+        
+        # Ajouter à la base et à l'index
+        self.database.persons[person_id] = person
+        self.database.person_key_index[key] = person_id
+        
+        return person
+    
     def _parse_person_ref(self, person_str: str, sex: Sex) -> Person:
         """
         Parse une référence de personne (Nom Prénom.occ).
@@ -288,15 +338,17 @@ class GwParser:
             sex: Sexe de la personne
         
         Returns:
-            Person créée
+            Person (récupérée ou créée avec déduplication)
         """
         # Extraire les parties (gérer les attributs #occu, #src, dates, etc.)
         tokens = person_str.split()
         
         if len(tokens) < 2:
-            # Nom incomplet
+            # Nom incomplet - créer sans déduplication
+            person_id = f"P{self.person_counter}"
+            self.person_counter += 1
             return Person(
-                person_id=f"P{self.person_counter}",
+                person_id=person_id,
                 first_name="?",
                 surname="?",
                 sex=sex,
@@ -320,17 +372,8 @@ class GwParser:
         # Remplacer les underscores par des espaces dans le prénom
         first_name = first_name.replace("_", " ")
         
-        # Générer un ID unique basé sur le nom
-        person_id = f"P{self.person_counter}"
-        self.person_counter += 1
-        
-        return Person(
-            person_id=person_id,
-            first_name=first_name,
-            surname=surname,
-            occ=occ,
-            sex=sex,
-        )
+        # Utiliser la déduplication
+        return self._get_or_create_person(first_name, surname, occ, sex)
     
     def _parse_child_ref(self, child_str: str, family_surname: str, sex: Sex) -> Person:
         """
@@ -344,15 +387,17 @@ class GwParser:
             sex: Sexe de l'enfant
         
         Returns:
-            Person créée
+            Person (récupérée ou créée avec déduplication)
         """
         # Extraire les parties (prénom, dates, attributs)
         tokens = child_str.split()
         
         if len(tokens) < 1:
-            # Prénom manquant
+            # Prénom manquant - créer sans déduplication
+            person_id = f"P{self.person_counter}"
+            self.person_counter += 1
             return Person(
-                person_id=f"P{self.person_counter}",
+                person_id=person_id,
                 first_name="?",
                 surname=family_surname,
                 sex=sex,
@@ -375,17 +420,8 @@ class GwParser:
         # Remplacer les underscores par des espaces dans le prénom
         first_name = first_name.replace("_", " ")
         
-        # Générer un ID unique basé sur le nom
-        person_id = f"P{self.person_counter}"
-        self.person_counter += 1
-        
-        return Person(
-            person_id=person_id,
-            first_name=first_name,
-            surname=family_surname,
-            occ=occ,
-            sex=sex,
-        )
+        # Utiliser la déduplication
+        return self._get_or_create_person(first_name, family_surname, occ, sex)
     
     def _parse_person_events(self, lines: List[str], start_idx: int) -> int:
         """Parse les événements d'une personne (pevt)."""

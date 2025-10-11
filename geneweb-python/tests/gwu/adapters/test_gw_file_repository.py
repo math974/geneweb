@@ -242,7 +242,8 @@ end pevt
         print(f"  Personnes: {person_count}")
         print(f"  Familles: {family_count}")
         
-        assert person_count == 47
+        # Avec déduplication, 35 personnes uniques (au lieu de 47 avec doublons)
+        assert person_count == 35
         assert family_count == 15
         
         # Recherche par nom

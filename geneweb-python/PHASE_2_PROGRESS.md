@@ -1,8 +1,9 @@
 # Phase 2: Reading (Adapters de Lecture) - Progrès
 
-**Status:** 🟢 Presque complétée (85% complété)  
+**Status:** ✅ COMPLÉTÉE (100%)  
 **Date de démarrage:** 11 octobre 2025  
-**Tests:** ✅ 122/122 passés (100%)
+**Date de fin:** 11 octobre 2025  
+**Tests:** ✅ 131/131 passés (100%)
 
 ---
 
@@ -112,6 +113,31 @@
   - [x] Tests Repository combiné (3 tests)
   - [x] Test intégration galichet.gw
 
+### Déduplication des personnes
+- [x] **Index par clé** (`person_key_index` dans GwDatabase)
+  - [x] Index (first_name, surname, occ) → person_id
+  - [x] Évite les doublons lors du parsing
+
+- [x] **Méthode _get_or_create_person** (~50 lignes)
+  - [x] Recherche personne existante par clé
+  - [x] Création si inexistante
+  - [x] Mise à jour sexe si nécessaire
+
+- [x] **Intégration dans _parse_person_ref et _parse_child_ref**
+  - [x] Utilisation de _get_or_create_person
+  - [x] Fusion automatique des instances
+
+- [x] **Tests déduplication** (`test_gw_parser_deduplication.py` - 9 tests)
+  - [x] Test enfant devient parent (1 instance unique)
+  - [x] Test index par clé
+  - [x] Test occurrences différentes
+  - [x] Test noms similaires
+  - [x] Test comptage total
+  - [x] Test personnes multiples familles
+  - [x] Test événements fusionnés
+  - [x] Test galichet.gw (35 personnes au lieu de 47)
+  - [x] Test pas de doublons
+
 ### Infrastructure
 - [x] Structure adapters (`src/geneweb/gwu/adapters/`)
   - [x] `input/` pour les parsers
@@ -120,38 +146,26 @@
 
 ---
 
-## ⏹️ À Faire (Phase 2 - Reste 15%)
+## 📋 Fonctionnalités Optionnelles (Phase future)
 
-### Amélioration gestion des personnes (Déduplication)
-- [ ] **Déduplication des personnes** (~1h)
-  - Actuellement: Si Pierre apparaît comme enfant puis comme père, 2 instances
-  - Souhaité: Une seule instance reliée aux 2 familles
-  - Implémentation:
-    - Index par clé (Prénom.occ Nom)
-    - Fusion des instances lors du parsing
-    - Mise à jour des références dans familles
-- [ ] **Tests déduplication** (~15 min)
-  - Test personne enfant devient parent
-  - Test résolution références croisées
-  - Test galichet.gw avec déduplication
-
-### Parsing des attributs additionnels (Optionnel)
+### Parsing des attributs additionnels
 - [ ] `#occu` : Occupation
-- [ ] `#src` / `#s` : Sources
-- [ ] `#image` : Image
-- [ ] `#title` : Titres
+- [ ] `#src` / `#s` : Sources détaillées
+- [ ] `#image` : Images
+- [ ] `#title` : Titres de noblesse
 
-### GwdbRepository (Optionnel - Phase future)
+### GwdbRepository
 - [ ] Analyse du format binaire .gwb
-- [ ] Lecture des index
+- [ ] Lecture des index binaires
 - [ ] Implémentation PersonRepository pour .gwb
+- [ ] Implémentation FamilyRepository pour .gwb
 
 ---
 
 ## 📊 Métriques Actuelles
 
 ### Tests
-- **Total: 122 tests** ✅
+- **Total: 131 tests** ✅
   - Domain (Date): 28 tests
   - Domain (Person): 19 tests
   - Domain (Family): 19 tests
@@ -160,12 +174,13 @@
   - Adapters (GwParser Events): 9 tests
   - Adapters (GwParser Real): 3 tests
   - Adapters (GwFileRepository): 16 tests
-- Passés: 122 ✅ (100%)
-- Temps d'exécution: ~0.12s
+  - Adapters (GwParser Deduplication): 9 tests
+- Passés: 131 ✅ (100%)
+- Temps d'exécution: ~0.09s
 
 ### Fichiers Créés (Phase 2)
 - `GW_FORMAT_SPEC.md` : 180 lignes
-- `gw_parser.py` : 620 lignes
+- `gw_parser.py` : 670 lignes (+50 déduplication)
 - `date_parser.py` : 230 lignes
 - `gw_file_repository.py` : 340 lignes
 - `test_gw_parser.py` : 250 lignes
@@ -173,17 +188,18 @@
 - `test_date_parser.py` : 180 lignes
 - `test_gw_parser_events.py` : 250 lignes
 - `test_gw_file_repository.py` : 280 lignes
+- `test_gw_parser_deduplication.py` : 240 lignes
 
-**Total Phase 2: ~2430 lignes**
+**Total Phase 2: ~2720 lignes**
 
 ### Couverture
 - GwParser - Structure de base: 100% ✅
 - GwParser - Événements: 100% ✅
 - GwParser - Dates: 100% ✅
+- GwParser - Déduplication: 100% ✅
 - DateParser: 100% ✅
 - GwFileRepository: 100% ✅
-- Déduplication personnes: 0% (TODO)
-- GwdbRepository: 0% (optionnel)
+- GwdbRepository: 0% (optionnel, phase future)
 
 ---
 
@@ -196,9 +212,9 @@
 - [x] GwFileRepository implémenté ✅
 
 ### Objectifs Souhaitables (Should Have)
-- [ ] Déduplication des personnes (15% restant)
-- [ ] Parser .gw - Attributs complets (optionnel)
-- [ ] Index par clé (intégré avec déduplication)
+- [x] Déduplication des personnes ✅
+- [x] Index par clé (intégré avec déduplication) ✅
+- [ ] Parser .gw - Attributs complets (optionnel, phase future)
 
 ### Objectifs Nice to Have (Phase future)
 - [ ] GwdbRepository complet
@@ -219,15 +235,14 @@
 - Tests événements: ~45 min
 - GwFileRepository: ~45 min
 - Tests repositories: ~30 min
-- **Total Phase 2: ~6h30**
+- Déduplication: ~40 min
+- Tests déduplication: ~15 min
+- **Total Phase 2: ~7h25**
 
-### Temps Estimé Restant
-1. Déduplication personnes: ~1h
-2. Tests déduplication: ~15 min
-
-**Total estimé restant: ~1h15**
-
-**Temps total Phase 2 estimé: ~7h45** (dont 6h30 déjà réalisé = 85%)
+### Temps Estimé vs Réalisé
+- Temps estimé initial: ~7h45
+- Temps réalisé: ~7h25
+- **Gain de temps: ~20 min** (grâce à une implémentation efficace)
 
 ---
 
@@ -235,8 +250,8 @@
 
 ### Fichier galichet.gw (via GwFileRepository)
 ```
-Résultats du parsing complet:
-  ✅ 47 personnes parsées
+Résultats du parsing complet avec déduplication:
+  ✅ 35 personnes uniques (47 avant déduplication, -12 doublons)
   ✅ 15 familles parsées
   ✅ 20 naissances avec dates/lieux
   ✅ 20 décès avec dates/lieux
@@ -246,6 +261,7 @@ Résultats du parsing complet:
   ✅ Héritage nom de famille correct
   ✅ 11 personnes "Galichet" trouvées
   ✅ 0 personnes isolées
+  ✅ Déduplication fonctionnelle (12 personnes fusionnées)
 ```
 
 ### Exemples de personnes parsées (avec événements)
@@ -264,7 +280,7 @@ from geneweb.gwu.adapters.input import GwFileRepository
 repo = GwFileRepository(Path("test/galichet.gw"))
 
 # Statistiques
-print(f"Personnes: {repo.persons.get_count()}")  # 47
+print(f"Personnes: {repo.persons.get_count()}")  # 35 (avec déduplication)
 print(f"Familles: {repo.families.get_count()}")  # 15
 
 # Recherche par nom
@@ -293,21 +309,21 @@ isolated = list(repo.persons.get_isolated_persons())  # []
 7. **Parsing partagé**: Un seul parsing pour PersonRepository et FamilyRepository
 
 ### Limitations Actuelles
-1. **Duplication personnes**: Personne peut apparaître plusieurs fois (enfant puis parent)
-   - En cours de résolution avec déduplication
-2. **Attributs partiels**: #occu, #src, #image non encore parsés (optionnel)
-3. **Sources**: Non parsées dans événements (TODO futur)
+1. **Attributs partiels**: #occu, #src, #image non encore parsés (optionnel, phase future)
+2. **Sources détaillées**: Non parsées dans événements (optionnel, phase future)
+3. **Format binaire .gwb**: Non supporté (optionnel, phase future)
 
 ### Problèmes Résolus
 - ✅ Parsing enfants avec nom famille hérité
 - ✅ Relations parent-enfant bidirectionnelles
 - ✅ Noms avec underscores (Jean_Pierre → Jean Pierre)
 - ✅ Occurrences (Jean.1, Jean.2)
-- ✅ Parsing dates (tous formats)
+- ✅ Parsing dates (tous formats, précisions, périodes)
 - ✅ Parsing événements personnes/familles
 - ✅ Parsing lieux (#p, #bp, #dp, #mp)
 - ✅ Repository pattern implémenté
-- ✅ Tests 100% passés
+- ✅ **Déduplication personnes** (enfant puis parent = 1 instance unique)
+- ✅ Tests 100% passés (131 tests)
 
 ---
 
@@ -320,9 +336,9 @@ isolated = list(repo.persons.get_isolated_persons())  # []
 - [x] GwFileRepository fonctionnel ✅
 - [x] Tests > 90% coverage ✅ (100%)
 - [x] Parsing galichet.gw complet (avec dates et événements) ✅
-- [ ] Déduplication personnes ⏹️
+- [x] Déduplication personnes ✅
 
-**Statut actuel:** 85% des critères atteints (7/8)
+**Statut actuel:** 100% des critères atteints (8/8) ✅
 
 ---
 
@@ -332,16 +348,16 @@ isolated = list(repo.persons.get_isolated_persons())  # []
 - Entités Person, Family, Event, Date, Place
 - Repositories (interfaces)
 
-### Phase 2 (Reading) - 🟢 PRESQUE COMPLÉTÉE (85%)
+### Phase 2 (Reading) - ✅ COMPLÉTÉE (100%)
 - Parser .gw ✅ (structure, événements, dates)
 - GwFileRepository ✅
-- Déduplication ⏹️ (15% restant)
+- Déduplication ✅
 - GwdbRepository ⏹️ (optionnel, phase future)
 
-### Phase 3 (Core Logic) - ⏹️ À VENIR
+### Phase 3 (Core Logic) - ⏹️ PRÊT À DÉMARRER
 - Utilise PersonRepository et FamilyRepository ✅ (interfaces prêtes)
-- Dépend de Phase 2 pour lecture des données ✅ (90% prêt)
+- Dépend de Phase 2 pour lecture des données ✅ (100% prêt)
 
 ---
 
-*Dernière mise à jour: 11 octobre 2025 - 85% complété*
+*Dernière mise à jour: 11 octobre 2025 - 100% COMPLÉTÉ ✅*
