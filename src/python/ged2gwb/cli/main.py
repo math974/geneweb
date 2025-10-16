@@ -1,14 +1,16 @@
 """Command-line interface for GED2GWB."""
 
 import argparse
+from dataclasses import dataclass
 import logging
 import sys
 from pathlib import Path
+from typing import Optional
 
 from lib.db_pickle.database.base import PickleBase
 
 from ..core.converter import Ged2GwbConverter
-from ..utils.options import ConversionOptions
+from ..utils.options import ConversionOptions, FullConversionOptions
 
 
 class Ged2GwbCLI:
@@ -25,10 +27,15 @@ class Ged2GwbCLI:
         )
 
         parser.add_argument(
-            "gedcom_file", type=Path, nargs="?", help="Input GEDCOM file"
+            "input_file",
+            metavar="gedcom_file",
+            type=Path,
+            nargs="?",
+            help="Input GEDCOM file",
         )
         parser.add_argument(
             "-o",
+            dest="output_file",
             type=Path,
             default=Path("base.pkl"),
             help="Output database file (default: base.pkl)",
@@ -36,12 +43,13 @@ class Ged2GwbCLI:
 
         parser.add_argument(
             "-charset",
+            dest="charset",
             choices=["ANSEL", "ASCII", "MSDOS"],
             help="Force charset decoding, overriding the possible setting in GEDCOM",
         )
         parser.add_argument(
             "-bd",
-            "-base-dir",
+            dest="base_dir",
             type=Path,
             metavar="DIR",
             help='Directory where the "bases" directory with databases is installed (default: ".")',
@@ -49,22 +57,26 @@ class Ged2GwbCLI:
 
         parser.add_argument(
             "-dates-dm",
+            dest="dates_dm",
             action="store_true",
             help="Interpret months-numbered dates as day/month/year",
         )
         parser.add_argument(
             "-dates-md",
+            dest="dates_md",
             action="store_true",
             help="Interpret months-numbered dates as month/day/year",
         )
         parser.add_argument(
             "-no-nd",
+            dest="no_nd",
             action="store_true",
             help="Don't interpret a year preceded by a minus sign as a negative year",
         )
 
         parser.add_argument(
             "-efn",
+            dest="efn",
             action="store_true",
             help="When creating a person, if the GEDCOM first name part holds several names, "
             'the first of this names becomes the person "first name" and the complete '
@@ -72,17 +84,25 @@ class Ged2GwbCLI:
         )
         parser.add_argument(
             "-epn",
+            dest="epn",
             action="store_true",
             help="When creating a person, if the GEDCOM first name part looks like a public name",
         )
         parser.add_argument(
-            "-no-efn", action="store_true", help="Cancels the previous --efn option"
+            "-no-efn",
+            dest="no_efn",
+            action="store_true",
+            help="Cancels the previous --efn option",
         )
         parser.add_argument(
-            "-no-epn", action="store_true", help="Cancels the previous --epn option"
+            "-no-epn",
+            dest="no_epn",
+            action="store_true",
+            help="Cancels the previous --epn option",
         )
         parser.add_argument(
             "-fne",
+            dest="fne",
             type=str,
             metavar="<be>",
             help="When creating a person, if the GEDCOM first name part holds a part between "
@@ -91,21 +111,27 @@ class Ged2GwbCLI:
         )
         parser.add_argument(
             "-lf",
+            dest="lf",
             action="store_true",
             help="Convert first names to lowercase letters, with initials in uppercase",
         )
         parser.add_argument(
             "-ls",
+            dest="ls",
             action="store_true",
             help="Convert surnames to lowercase letters, with initials in uppercase. "
             "Try to keep lowercase particles",
         )
         parser.add_argument(
-            "-us", action="store_true", help="Convert surnames to uppercase letters"
+            "-us",
+            dest="us",
+            action="store_true",
+            help="Convert surnames to uppercase letters",
         )
 
         parser.add_argument(
             "-particles",
+            dest="particles_file",
             type=Path,
             metavar="<FILE>",
             help="Use the given file as list of particles",
@@ -113,6 +139,7 @@ class Ged2GwbCLI:
 
         parser.add_argument(
             "-ds",
+            dest="default_source",
             type=str,
             metavar="<source>",
             help="Set the source field for persons and families without source data",
@@ -120,23 +147,29 @@ class Ged2GwbCLI:
 
         parser.add_argument(
             "-rs-no-mention",
+            dest="rs_no_mention",
             action="store_true",
             help="Force relation status to NoMention (default is Married)",
         )
 
         parser.add_argument(
             "-no-pit",
+            dest="no_pit",
             action="store_true",
             help="Do not consider persons having titles as public",
         )
 
         parser.add_argument(
-            "-nopicture", action="store_true", help="Don't extract individual picture"
+            "-nopicture",
+            dest="no_picture",
+            action="store_true",
+            help="Don't extract individual picture",
         )
 
         parser.add_argument(
             "-udi",
-            type=str,
+            dest="udi",
+            type=self.parse_udi,
             metavar="x-y",
             help="Set the interval for persons whose death part is undefined: "
             "if before x years, they are considered as alive; "
@@ -146,54 +179,72 @@ class Ged2GwbCLI:
         )
 
         parser.add_argument(
-            "-uin", action="store_true", help="Put untreated GEDCOM tags in notes"
+            "-uin",
+            dest="uin",
+            action="store_true",
+            help="Put untreated GEDCOM tags in notes",
         )
 
         parser.add_argument(
             "-tnd",
+            dest="tnd",
             action="store_true",
             help="Set negative dates when inconsistency (e.g. birth after death)",
         )
 
         parser.add_argument(
             "-compress",
+            dest="compress",
             action="store_true",
             default=False,
             help="Compress output with gzip (default: False)",
         )
         parser.add_argument(
-            "-no-compress", action="store_true", help="Do not compress output"
+            "-no-compress",
+            dest="no_compress",
+            action="store_true",
+            help="Do not compress output",
         )
         parser.add_argument(
-            "-force",
             "-f",
+            dest="force",
             action="store_true",
             help="Remove database if already existing",
         )
         parser.add_argument(
             "-load",
+            dest="load",
             type=str,
             metavar="<file>",
             help="Load existing pickle database and display information",
         )
 
         parser.add_argument(
-            "-log", type=Path, metavar="<file>", help="Redirect log trace to this file"
+            "-log",
+            dest="log_file",
+            type=Path,
+            metavar="<file>",
+            help="Redirect log trace to this file",
         )
         parser.add_argument(
-            "-verbose", "-v", action="store_true", help="Verbose output"
+            "-v", dest="verbose", action="store_true", help="Verbose output"
         )
         parser.add_argument(
-            "-trackid", action="store_true", help="Print gedcom id to gw id matches"
+            "-trackid",
+            dest="trackid",
+            action="store_true",
+            help="Print gedcom id to gw id matches",
         )
 
         parser.add_argument(
-            "-no-consistency-check", action="store_true", help="No consistency check"
+            "-nc",
+            dest="no_consistency_check",
+            action="store_true",
+            help="No consistency check (alias)",
         )
         parser.add_argument(
-            "-nc", "--nc", action="store_true", help="No consistency check (alias)"
+            "--reorg", dest="reorg", action="store_true", help="Enable reorg mode"
         )
-        parser.add_argument("--reorg", action="store_true", help="Enable reorg mode")
 
         return parser
 
@@ -203,8 +254,8 @@ class Ged2GwbCLI:
             log_level = logging.DEBUG
 
         handlers: list[logging.Handler] = [logging.StreamHandler()]
-        if args.log:
-            handlers.append(logging.FileHandler(args.log))
+        if args.log_file:
+            handlers.append(logging.FileHandler(args.log_file))
 
         logging.basicConfig(
             level=log_level,
@@ -212,7 +263,9 @@ class Ged2GwbCLI:
             handlers=handlers,
         )
 
-    def parse_udi(self, udi_str: str) -> tuple:
+    def parse_udi(self, udi_str: str) -> Optional[tuple]:
+        if not udi_str:
+            return None
         try:
             parts = udi_str.split("-")
             if len(parts) != 2:
@@ -263,18 +316,17 @@ class Ged2GwbCLI:
     def run(self, args=None) -> int:
         """Run the CLI with given arguments."""
         parser = self.create_parser()
-        args = parser.parse_args(args)
-
+        args: FullConversionOptions = parser.parse_args(args)
         self.setup_logging(args)
 
         if args.no_compress:
             args.compress = False
 
-        if args.udi:
-            args.udi = self.parse_udi(args.udi)
+        # if args.udi:
+        #     args.udi = self.parse_udi(args.udi)
 
         try:
-            if not args.load and not args.gedcom_file:
+            if not args.load and not args.input_file:
                 print(
                     "Error: Either GEDCOM file or --load option is required",
                     file=sys.stderr,
@@ -285,9 +337,10 @@ class Ged2GwbCLI:
                 result = self.load_database(args.load)
                 return 0 if result is not None else 1
 
-            if args.nc:
-                args.no_consistency_check = True
+            # if args.nc:
+            #     args.no_consistency_check = True
             options = ConversionOptions.from_args(args)
+            # options = args
             converter = Ged2GwbConverter(options)
             converter.validate_input()
             if args.trackid:

@@ -67,11 +67,13 @@ class ConversionOptions:
             raise ValueError("--udi must be a tuple of (x, y) years")
 
     @classmethod
-    def from_args(cls, args) -> "ConversionOptions":
+    def from_args(cls, args: "FullConversionOptions") -> "ConversionOptions":
         """Create options from command line arguments."""
         return cls(
-            input_file=args.gedcom_file,
-            output_file=args.output if args.output is not None else Path("a.pkl"),
+            input_file=args.input_file,
+            output_file=(
+                args.output_file if args.output_file is not None else Path("a.pkl")
+            ),
             base_dir=args.base_dir,
             charset=args.charset,
             dates_dm=args.dates_dm,
@@ -86,11 +88,11 @@ class ConversionOptions:
             lf=args.lf,
             ls=args.ls,
             us=args.us,
-            particles_file=args.particles,
-            default_source=args.ds,
+            particles_file=args.particles_file,
+            default_source=args.default_source,
             rs_no_mention=args.rs_no_mention,
             no_pit=args.no_pit,
-            no_picture=args.nopicture,
+            no_picture=args.no_picture,
             udi=(
                 args.udi
                 if isinstance(args.udi, tuple)
@@ -103,13 +105,20 @@ class ConversionOptions:
             uin=args.uin,
             compress=args.compress,
             force=args.force,
-            log_file=args.log,
+            log_file=args.log_file,
             verbose=args.verbose,
             track_id=args.trackid,
-            no_consistency_check=args.no_consistency_check or args.nc,
-            nc=args.nc,
+            no_consistency_check=args.no_consistency_check,
+            nc=args.no_consistency_check,
         )
 
     def get_gedcom_parser_options(self) -> dict:
         """Get options for GEDCOM parser."""
         return {"preserve_bom": True, "preserve_notes": not self.no_picture}
+
+
+@dataclass
+class FullConversionOptions(ConversionOptions):
+    no_compress: bool = False  # Do not compress output
+    load: str | None = None  # Load existing pickle database and display information
+    trackid: bool = False  # Print gedcom id to gw id matches
