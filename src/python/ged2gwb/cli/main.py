@@ -29,61 +29,60 @@ class Ged2GwbCLI:
         )
         parser.add_argument(
             "-o",
-            "--output",
             type=Path,
             default=Path("base.pkl"),
             help="Output database file (default: base.pkl)",
         )
 
         parser.add_argument(
-            "--charset",
+            "-charset",
             choices=["ANSEL", "ASCII", "MSDOS"],
             help="Force charset decoding, overriding the possible setting in GEDCOM",
         )
         parser.add_argument(
             "-bd",
-            "--base-dir",
+            "-base-dir",
             type=Path,
             metavar="DIR",
             help='Directory where the "bases" directory with databases is installed (default: ".")',
         )
 
         parser.add_argument(
-            "--dates-dm",
+            "-dates-dm",
             action="store_true",
             help="Interpret months-numbered dates as day/month/year",
         )
         parser.add_argument(
-            "--dates-md",
+            "-dates-md",
             action="store_true",
             help="Interpret months-numbered dates as month/day/year",
         )
         parser.add_argument(
-            "--no-nd",
+            "-no-nd",
             action="store_true",
             help="Don't interpret a year preceded by a minus sign as a negative year",
         )
 
         parser.add_argument(
-            "--efn",
+            "-efn",
             action="store_true",
             help="When creating a person, if the GEDCOM first name part holds several names, "
             'the first of this names becomes the person "first name" and the complete '
             'GEDCOM first name part a "first name alias"',
         )
         parser.add_argument(
-            "--epn",
+            "-epn",
             action="store_true",
             help="When creating a person, if the GEDCOM first name part looks like a public name",
         )
         parser.add_argument(
-            "--no-efn", action="store_true", help="Cancels the previous --efn option"
+            "-no-efn", action="store_true", help="Cancels the previous --efn option"
         )
         parser.add_argument(
-            "--no-epn", action="store_true", help="Cancels the previous --epn option"
+            "-no-epn", action="store_true", help="Cancels the previous --epn option"
         )
         parser.add_argument(
-            "--fne",
+            "-fne",
             type=str,
             metavar="<be>",
             help="When creating a person, if the GEDCOM first name part holds a part between "
@@ -91,52 +90,52 @@ class Ged2GwbCLI:
             'the usual first name: e.g. --fne \'""\' or --fne "()"',
         )
         parser.add_argument(
-            "--lf",
+            "-lf",
             action="store_true",
             help="Convert first names to lowercase letters, with initials in uppercase",
         )
         parser.add_argument(
-            "--ls",
+            "-ls",
             action="store_true",
             help="Convert surnames to lowercase letters, with initials in uppercase. "
             "Try to keep lowercase particles",
         )
         parser.add_argument(
-            "--us", action="store_true", help="Convert surnames to uppercase letters"
+            "-us", action="store_true", help="Convert surnames to uppercase letters"
         )
 
         parser.add_argument(
-            "--particles",
+            "-particles",
             type=Path,
             metavar="<FILE>",
             help="Use the given file as list of particles",
         )
 
         parser.add_argument(
-            "--ds",
+            "-ds",
             type=str,
             metavar="<source>",
             help="Set the source field for persons and families without source data",
         )
 
         parser.add_argument(
-            "--rs-no-mention",
+            "-rs-no-mention",
             action="store_true",
             help="Force relation status to NoMention (default is Married)",
         )
 
         parser.add_argument(
-            "--no-pit",
+            "-no-pit",
             action="store_true",
             help="Do not consider persons having titles as public",
         )
 
         parser.add_argument(
-            "--nopicture", action="store_true", help="Don't extract individual picture"
+            "-nopicture", action="store_true", help="Don't extract individual picture"
         )
 
         parser.add_argument(
-            "--udi",
+            "-udi",
             type=str,
             metavar="x-y",
             help="Set the interval for persons whose death part is undefined: "
@@ -147,49 +146,49 @@ class Ged2GwbCLI:
         )
 
         parser.add_argument(
-            "--uin", action="store_true", help="Put untreated GEDCOM tags in notes"
+            "-uin", action="store_true", help="Put untreated GEDCOM tags in notes"
         )
 
         parser.add_argument(
-            "--tnd",
+            "-tnd",
             action="store_true",
             help="Set negative dates when inconsistency (e.g. birth after death)",
         )
 
         parser.add_argument(
-            "--compress",
+            "-compress",
             action="store_true",
             default=False,
             help="Compress output with gzip (default: False)",
         )
         parser.add_argument(
-            "--no-compress", action="store_true", help="Do not compress output"
+            "-no-compress", action="store_true", help="Do not compress output"
         )
         parser.add_argument(
-            "--force",
+            "-force",
             "-f",
             action="store_true",
             help="Remove database if already existing",
         )
         parser.add_argument(
-            "--load",
+            "-load",
             type=str,
             metavar="<file>",
             help="Load existing pickle database and display information",
         )
 
         parser.add_argument(
-            "--log", type=Path, metavar="<file>", help="Redirect log trace to this file"
+            "-log", type=Path, metavar="<file>", help="Redirect log trace to this file"
         )
         parser.add_argument(
-            "--verbose", "-v", action="store_true", help="Verbose output"
+            "-verbose", "-v", action="store_true", help="Verbose output"
         )
         parser.add_argument(
-            "--trackid", action="store_true", help="Print gedcom id to gw id matches"
+            "-trackid", action="store_true", help="Print gedcom id to gw id matches"
         )
 
         parser.add_argument(
-            "--no-consistency-check", action="store_true", help="No consistency check"
+            "-no-consistency-check", action="store_true", help="No consistency check"
         )
         parser.add_argument(
             "-nc", "--nc", action="store_true", help="No consistency check (alias)"

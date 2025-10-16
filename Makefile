@@ -206,7 +206,11 @@ endif
 	@printf "Done.\n\n\033[1;1mDistribution complete\033[0m\n"
 	@printf "You can launch Geneweb with “\033[1;1mcd $(DISTRIB_DIR)\033[0m” followed by “\033[1;1mgw/gwd$(EXT)\033[0m”.\n"
 
-.PHONY: build build-geneweb build-geneweb-rpc gwd fmt install uninstall distrib
+distrib-python: distrib
+# 	cp -r src/python distribution/python
+	./src/to_distrib.sh --py-modules src/python --distrib-path distribution/gw
+
+.PHONY: build build-geneweb build-geneweb-rpc gwd fmt install uninstall distrib distrib-python
 
 # [END] Installation / Distribution section
 
