@@ -4,7 +4,7 @@ python_modules_path="src/python"
 distrib_path="./distribution/gw"
 binaries=(
     "ged2gwb"
-    # "consang"
+    "consang"
 )
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -24,8 +24,9 @@ done
 
 echo $(pwd)
 for bin in "${binaries[@]}"; do
+    echo -n "Processing $python_modules_path/$bin  "
     if [ -d "$python_modules_path/$bin" ]; then
-        echo "Processing $bin"
+        echo -e "-- Found\033[2m"
         echo "Copy $python_modules_path/$bin/* to $distrib_path/${bin}_module"
         mkdir -p "$distrib_path/${bin}_module"
         cp -r "$python_modules_path/$bin"/* "$distrib_path/${bin}_module"
@@ -37,7 +38,10 @@ for bin in "${binaries[@]}"; do
         echo "PYTHONPATH=\$absolute_path python3 -m \"${bin}_module\" \"\$@\"" >> "$distrib_path/$bin"
 
         chmod +x "$distrib_path/$bin"
+    else
+        echo "-- Not found"
     fi
+    echo -en "\033[0m"
 done
 
 cp -r "$python_modules_path"/lib "$distrib_path"/lib

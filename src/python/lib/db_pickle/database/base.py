@@ -61,6 +61,7 @@ class PickleBase:
         """Get person by ID."""
         return self.data.persons.get(iper)
 
+    @property
     def persons(self) -> Dict[Iper, GenPerson]:
         """Get all persons."""
         return self.data.persons
@@ -127,3 +128,20 @@ class PickleBase:
             "strings_count": self.nb_of_strings(),
             "particles_count": len(self.data.particles),
         }
+
+
+def open_database(path: str) -> PickleBaseData:
+    """
+    Open a pickle database from the given path.
+
+    Args:
+        path: Path to the database file
+
+    Returns:
+        An instance of PickleBase
+    """
+    import pickle
+
+    with open(f"{path}.pkl", "rb") as f:
+        data = pickle.load(f)
+        return data
