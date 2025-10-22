@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+    <title>{{ person.display_name }}</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>{{ person.display_name }}</h1>
+            {% if person.occ > 0 %}<span class="occ">({{ person.occ }})</span>{% endif %}
+        </header>
+        
+        <main>
+            <div class="person-info">
+                <h2>Informations personnelles</h2>
+                
+                {% if person.birth %}
+                <p><strong>Né(e) :</strong> {{ person.birth }}</p>
+                {% endif %}
+                
+                {% if person.birth_place %}
+                <p><strong>Lieu de naissance :</strong> {{ person.birth_place }}</p>
+                {% endif %}
+                
+                {% if person.death %}
+                <p><strong>Décédé(e) :</strong> {{ person.death }}</p>
+                {% endif %}
+                
+                {% if person.death_place %}
+                <p><strong>Lieu de décès :</strong> {{ person.death_place }}</p>
+                {% endif %}
+            </div>
+            
+            <!-- Menu de navigation -->
+            <nav class="person-menu">
+                <a href="/{{ base_name }}/person/{{ person.id }}?m=A">Ascendance</a>
+                <a href="/{{ base_name }}/person/{{ person.id }}?m=D">Descendance</a>
+                <a href="/{{ base_name }}/person/{{ person.id }}?m=F">Famille</a>
+                <a href="/{{ base_name }}/search">Rechercher</a>
+            </nav>
+        </main>
+    </div>
+</body>
+</html>
