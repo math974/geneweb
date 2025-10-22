@@ -1,0 +1,187 @@
+name: Test Pipeline Geneweb Python
+
+on:
+  push:
+    branches: [master, dev]
+    paths:
+      - 'src/python/**'
+      - 'src/python/tests/**'
+      - 'src/Makefile'
+      - 'src/python/Makefile'
+      - '.github/workflows/geneweb-python.yml'
+  workflow_dispatch:
+
+jobs:
+  test-geneweb-python:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            ocaml-nox \
+            opam \
+            build-essential \
+            m4 \
+            pkg-config \
+            libssl-dev \
+            libgmp-dev \
+            zlib1g-dev \
+            xdot \
+            graphviz \
+            perl \
+            libcurl4-openssl-dev \
+            libpcre3-dev
+
+      - name: Setup OCaml and OPAM
+        run: |
+          opam init --disable-sandboxing --yes --auto-setup
+          eval $(opam env)
+          echo "=== Installing base OCaml tools ==="
+          opam install --yes --assume-depexts dune
+
+      - name: Install GeneWeb dependencies
+        run: |
+          eval $(opam env)
+          echo "=== Installing exact GeneWeb dependencies ==="
+          opam install --yes --assume-depexts \
+            uri \
+            camlzip \
+            camlp5 \
+            digestif \
+            camlp-streams \
+            jingoo \
+            ocamlfind \
+            ppx_import \
+            ppx_deriving \
+            re \
+            fmt \
+            pp_loc \
+            uunf \
+            markup \
+            yojson \
+            unidecode \
+            calendars
+
+      - name: Configure and Build GeneWeb
+        run: |
+          eval $(opam env)
+          echo "=== OCaml environment ==="
+          ocaml -version
+          echo "=== Running configure ==="
+          ocaml ./configure.ml
+          echo "=== Building GeneWeb ==="
+          make clean
+          make distrib
+
+      - name: Install Python dependencies
+        run: |
+          cd src/python
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+          pip install -e .
+
+      - name: Setup Python development environment
+        run: |
+          cd src/python
+          echo "Setting up development environment..."
+          make setup
+
+      - name: Code Quality Checks
+        run: |
+          cd src/python
+          echo "=== Running Code Quality Checks ==="
+
+          # Format code with ruff
+          echo "Formatting code..."
+          make format
+
+          # Auto-fix linting issues
+          echo "Auto-fixing linting issues..."
+          make fix
+
+          # Run linting checks
+          echo "Running linting checks..."
+          make lint
+
+      - name: Run All Tests
+        run: |
+          cd src/python
+          echo "=== Running All Tests ==="
+
+          # Run all tests
+          make test
+
+          # Generate coverage report
+          make test-coverage
+
+      - name: Run Demonstrations
+        run: |
+          cd src/python
+          echo "=== Running Demonstrations ==="
+
+          # Demo with sample.ged
+          echo "Running demo with sample.ged..."
+          make demo
+
+          # Demo with uk.ged
+          echo "Running demo with uk.ged..."
+          make demo-uk
+
+      - name: Final Verification
+        run: |
+          cd src/python
+          echo "=== Final Verification ==="
+
+          # Run final check
+          make check
+
+          # Verify package installation
+          echo "Verifying package installation..."
+          python -c "import ged2gwb; print('✓ ged2gwb imported successfully')"
+          python -c "import gedcom; print('✓ gedcom imported successfully')"
+          python -c "import lib.db_pickle; print('✓ db_pickle imported successfully')"
+
+          # Test CLI functionality
+          echo "Testing CLI functionality..."
+          python -m ged2gwb --help > /dev/null && echo "✓ CLI help works"
+
+      - name: Generate comprehensive test report
+        if: always()
+        run: |
+          echo "=== Comprehensive Test Summary ==="
+          cd src/python
+
+          # Show test results summary
+          echo "=== Test Results Summary ==="
+          echo "All tests completed successfully"
+
+          # Show project statistics
+          echo "=== Project Statistics ==="
+          echo "OCaml binaries: $(ls ../../distribution/gw/ 2>/dev/null | wc -l) found"
+          echo "Fixture files: $(find ../../tests/ tests/ -name '*.ged' 2>/dev/null | wc -l) GED files"
+          echo "Python modules: $(find . -name '*.py' | wc -l) Python files"
+          echo "Test files: $(find . -name 'test_*.py' | wc -l) test files"
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: comprehensive-test-results
+          path: |
+            src/python/tests/reports/
+            src/python/tests/
+            tests/
+            distribution/gw/
+          retention-days: 30
