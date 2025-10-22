@@ -1,0 +1,73 @@
+encoding: utf-8
+gwplus
+
+fam Galichet Jean_Pierre #occu Marchand_de_bois #src déjà_décédés_au_mariage_de_sa_fille_Thérèse_Eugénie 0 <1849 + Loche Marie_Elisabeth #src déjà_décédés_au_mariage_de_sa_fille_Thérèse_Eugénie 0 <1849
+src déjà_décédés_au_mariage_de_sa_fille_Thérèse_Eugénie
+csrc rajout_de_2_enfants_pour_test
+fevt
+#marr 
+note Rajout de notes avec retour à la ligne avec des tag html
+note <br>1880 - Habitent Yzernay naissance d'une fille
+note <br>1886 - Habitent la Verdelière (6 enfants) - Recensement Moulins: - Vue 23
+note <br>1891 - N'habitent plus Moulins, recensés au Temple (79) * Vue 7
+end fevt
+beg
+end
+
+notes Loche Marie_Elisabeth
+beg
+* j'utilise la même image dans les notes du mari et de la femme
+* avec un texte alternatif sans apostrophe pour le mari [[Jean Pierre/Galichet]]
+
+* et un texte alternatif '''avec''' apostrophe pour la femme
+<br><img src="%sm=IM;s=jean_pierre.0.galichet.jpg" width=50% alt="retour d'etat">
+
+* les vues individuelles sont correctes,
+mais la vue sous forme de table des ascendants est incorrecte à cause de cette apostrophe.
+end notes
+
+notes Galichet Jean_Pierre
+beg
+* j'utilise la même image dans les notes du mari et de la femme
+* avec un texte alternatif sans apostrophe pour le mari
+<br><img src="%sm=IM;s=jean_pierre.0.galichet.jpg" width=50% alt="texte alternatif sans apostrophe">
+
+* et un texte alternatif '''avec''' apostrophe pour la femme [[Marie Elisabeth/Loche]]
+
+* les vues individuelles sont correctes, mais la vue sous forme de table des ascendants est incorrecte à cause de cette apostrophe.
+end notes
+
+pevt Loche Marie_Elisabeth
+#deat <1849
+end pevt
+
+pevt Galichet Jean_Pierre
+#deat <1849
+end pevt
+
+notes-db
+  TITLE=Ceci est une base de test.
+
+  * initialement créée pour investiguer le pb #1334
+  (https://github.com/geneweb/geneweb/issues/1334)
+  et valider la correction avec le script gwu_test.sh
+
+  * test la présence d'une apostrophe dans le texte alternate d'une image,
+  (https://github.com/geneweb/geneweb/issues/1558)
+  <br>voir les notes du couple [[Jean Pierre/Galichet]] et [[Marie Elisabeth/Loche]]
+end notes-db
+
+# extended page "Chantal" not referenced
+page-ext Chantal
+  TITLE=la 1ere ligne correspond au titre
+  * et j'utilise une syntax wiki pour le reste
+  * avec un lien vers [[Laurent/Geruzet]]
+end page-ext
+
+# extended page "Andre" not referenced
+page-ext Andre
+  TITLE=title line, is first line
+  and next is text
+  * with wiki syntax
+  * this note created from note of [[Jean Charles/Galichet]]
+end page-ext

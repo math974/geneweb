@@ -1,0 +1,46 @@
+encoding: utf-8
+gwplus
+
+fam Galichet Jean_Pierre #occu Marchand_de_bois #src déjà_décédés_au_mariage_de_sa_fille_Thérèse_Eugénie 0 <1849 + Loche Marie_Elisabeth #src déjà_décédés_au_mariage_de_sa_fille_Thérèse_Eugénie 0 <1849
+src déjà_décédés_au_mariage_de_sa_fille_Thérèse_Eugénie
+csrc rajout_de_2_enfants_pour_test
+fevt
+#marr 
+note Rajout de notes avec retour à la ligne avec des tag html
+note <br>1880 - Habitent Yzernay naissance d'une fille
+note <br>1886 - Habitent la Verdelière (6 enfants) - Recensement Moulins: - Vue 23
+note <br>1891 - N'habitent plus Moulins, recensés au Temple (79) * Vue 7
+end fevt
+beg
+end
+
+notes Loche Marie_Elisabeth
+beg
+* j'utilise la même image dans les notes du mari et de la femme
+* avec un texte alternatif sans apostrophe pour le mari [[Jean Pierre/Galichet]]
+
+* et un texte alternatif '''avec''' apostrophe pour la femme
+<br><img src="%sm=IM;s=jean_pierre.0.galichet.jpg" width=50% alt="retour d'etat">
+
+* les vues individuelles sont correctes,
+mais la vue sous forme de table des ascendants est incorrecte à cause de cette apostrophe.
+end notes
+
+notes Galichet Jean_Pierre
+beg
+* j'utilise la même image dans les notes du mari et de la femme
+* avec un texte alternatif sans apostrophe pour le mari
+<br><img src="%sm=IM;s=jean_pierre.0.galichet.jpg" width=50% alt="texte alternatif sans apostrophe">
+
+* et un texte alternatif '''avec''' apostrophe pour la femme [[Marie Elisabeth/Loche]]
+
+* les vues individuelles sont correctes, mais la vue sous forme de table des ascendants est incorrecte à cause de cette apostrophe.
+end notes
+
+pevt Loche Marie_Elisabeth
+#deat <1849
+end pevt
+
+pevt Galichet Jean_Pierre
+#deat <1849
+end pevt

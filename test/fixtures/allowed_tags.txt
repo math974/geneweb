@@ -1,0 +1,18 @@
+# Tags HTML autorisés pour les tests
+# Un tag par ligne
+
+p
+div
+span
+a
+strong
+em
+ul
+li
+table
+tr
+td
+th
+h1
+h2
+h3

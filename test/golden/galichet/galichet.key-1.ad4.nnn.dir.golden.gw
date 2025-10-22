@@ -1,0 +1,19 @@
+encoding: utf-8
+gwplus
+
+fam Galichet Jean_Pierre #occu Marchand_de_bois #src déjà_décédés_au_mariage_de_sa_fille_Thérèse_Eugénie 0 <1849 + Loche Marie_Elisabeth #src déjà_décédés_au_mariage_de_sa_fille_Thérèse_Eugénie 0 <1849
+src déjà_décédés_au_mariage_de_sa_fille_Thérèse_Eugénie
+csrc rajout_de_2_enfants_pour_test
+fevt
+#marr 
+end fevt
+beg
+end
+
+pevt Loche Marie_Elisabeth
+#deat <1849
+end pevt
+
+pevt Galichet Jean_Pierre
+#deat <1849
+end pevt

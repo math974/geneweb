@@ -1,0 +1,15 @@
+encoding: utf-8
+gwplus
+#f P0 P1
+#c P2
+#c P3
+#c P4
+#c P5
+#c P6
+#unknown
+#note Rajout de notes avec retour à la ligne avec des tag html
+#note <br>1880 - Habitent Yzernay naissance d'une fille
+#note <br>1886 - Habitent la Verdelière (6 enfants) - Recensement Moulins: - Vue 23
+#note <br>1891 - N'habitent plus Moulins, recensés au Temple (79) * Vue 7
+#src déjà_décédés_au_mariage_de_sa_fille_Thérèse_Eugénie
+#src csrc: rajout_de_2_enfants_pour_test

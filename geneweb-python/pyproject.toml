@@ -36,7 +36,7 @@ dev = [
 ]
 
 [project.scripts]
-gwu = "geneweb.gwu.cli.main:main"
+gwu = "geneweb.gwu.__main__:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

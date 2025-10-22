@@ -1,0 +1,159 @@
+encoding: utf-8
+# Perrette.0 Sutaine
+#sex female
+#birt 1600
+#deat 11/4/1684 #p _[Saint-Jacques]_-_Reims,51,Marne,Champagne-Ardenne,France
+# Jean Pierre.0 Galichet
+#sex male
+#deat <1849
+# #mp.0 21/12/2F
+#sex female
+# Laure.0 Galichet
+#sex female
+#birt 1839
+# Jeanne.1 Boizot
+#sex female
+#birt 27/2/1671 #p _[Saint-Jacques]_-_Reims,51,Marne,Champagne-Ardenne,France
+#deat 22/4/1748 #p _[Saint-Hilaire]_-_Reims,51,Marne,Champagne-Ardenne,France
+# Jean.0 Jayot
+#sex male
+#birt 1604
+#deat 8/11/1674 #p _[Saint-Jacques]_-_Reims,51,Marne,Champagne-Ardenne,France
+# Jean-Paul.0 Galichet
+#sex male
+#birt 2/2/1836
+# #mp.0 1845
+#sex female
+# Louis.1 Sutaine
+#sex male
+# Jean.1234 Boizot
+#sex male
+#birt 1618
+#deat 22/3/1702 #p _[Saint-Jacques]_-_Reims,51,Marne,Champagne-Ardenne,France
+# Pierre.0 Galichet
+#sex male
+#birt 1814
+#deat 1/1/1835
+# Anthoine.1 Geruzet
+#sex male
+#birt 1640
+#deat 17/1/1709 #p _[Saint-Hilaire]_-_Reims,51,Marne,Champagne-Ardenne,France
+# Jacques.0 Geruzet
+#sex male
+#birt 4/2/1705 #p _[Saint-Symphorien]_-_Reims,51,Marne,Champagne-Ardenne,France
+#deat 10/3/1774 #p _[Saint_Pierre]_-_Reims,51,Marne,Champagne-Ardenne,France
+# lolo.0 Galichet
+#sex male
+#birt 1818
+#deat
+#  [Saint-Jacques] - Reims,51,Marne,Champagne-Ardenne,France.0 #mp
+#sex female
+# Louise.0 Bouquet
+#sex female
+# #mp.0 1840
+#sex female
+# #mp.0 1570
+#sex female
+# #mp.0 17/1/1695
+#sex female
+# Marie Elisabeth.0 Loche
+#sex female
+#deat <1849
+# Laurent.0 Geruzet
+#sex male
+#birt 25/9/1738 #p _[Saint_Pierre]_-_Reims,51,Marne,Champagne-Ardenne,France
+#deat 1812 #p Laon,02,Aisne,Picardie,France
+# #mp.0 25/3/1786
+#sex female
+# #mp.0 30/10/1794
+#sex female
+# Jean Charles.0 Galichet
+#sex male
+#birt 1813 #s 1849-36ans
+#deat
+# #mp.0 2/8/1728
+#sex female
+# Jean-Baptiste.0 Geruzet
+#sex male
+#birt 23/9/1768 #p Laon,02,Aisne,Picardie,France
+#deat 20/5/1846 #p Laon,02,Aisne,Picardie,France
+# Marty.0 3/3/1835
+#sex female
+# Louis.0 Sutaine
+#sex male
+#birt 1575
+#deat
+# #mp.0 28/12/1763
+#sex female
+# Paul.0 Galichet
+#sex male
+#birt 1816
+#deat 1/1/1886
+# Marie-Jeanne.0 Geruzet
+#sex female
+#birt 31/12/1751
+#deat 8/1/1830 #p Soissons,02,Aisne,Picardie,France
+# Thérèse Eugénie.0 Galichet
+#sex female
+#birt 7/9/1830 #p _[Châlons-sur-Marne]_-_Châlons-en-Champagne,51,Marne,Champagne-Ardenne,France #s acte_de_mariage
+#deat
+# Anthoine.0 Geruzet
+#sex male
+#birt 1667 #p _[Saint-Roch]_-_Paris,75,Ville-de-Paris,Ile-de-France,France
+#deat 16/2/1755 #p _[Saint-Symphorien]_-_Reims,51,Marne,Champagne-Ardenne,France
+# Claude.0 Jayot
+#sex female
+#birt 27/6/1633
+#deat 11/4/1697 #p _[Saint-Hilaire]_-_Reims,51,Marne,Champagne-Ardenne,France
+# Laurence.0 Geruzet
+#sex female
+#birt 23/1/1802 #p Nonancourt,27,Eure,Normandie,France
+#deat 18/4/1866 #p Amiens,80,Somme,Picardie,France
+#f P0 P1
+#c P2
+#c P3
+#c P4
+#c P5
+#c P6
+#marr
+#f P4 P7
+#c P8
+#c P9
+#marr 3/3/1835
+#f P27 P31
+#marr 25/3/1786 #p Reims,51,Marne,Champagne-Ardenne,France #s base_michelbonnet
+#f P14 P15
+#c P16
+#marr #p _[Saint-Jacques]_-_Reims,51,Marne,Champagne-Ardenne,France
+#f P12 P13
+#c P14
+#marr 1570 #p _[Saint-Jacques]_-_Reims,51,Marne,Champagne-Ardenne,France
+#f P25 P26
+#c P27
+#c P28
+#marr 2/8/1728 #p _[Saint_Pierre]_-_Reims,51,Marne,Champagne-Ardenne,France
+#f P27 P29
+#c P30
+#marr 28/12/1763 #p _[Eglise_St_Rémi]_-_Laon,02,Aisne,Picardie,France
+#f P23 P24
+#c P25
+#marr 17/1/1695 #p _[Saint-Jacques]_-_Reims,51,Marne,Champagne-Ardenne,France
+#f P30 P33
+#c P34
+#marr 21/12/2 #p _[Mairie]_-_Reims,51,Marne,Champagne-Ardenne,France
+#f P19 P18
+#c P20
+#marr
+#f P5 P11
+#marr 1845 #p Sydney,Nouvelle-Galles\_du\_Sud,Australie #s inventé
+#f P21 P22
+#c P23
+#marr
+#f P17 P16
+#c P18
+#marr
+#f P5 P10
+#marr 1840 #p Brisbane,Queensland,Australie #s inventé
+#div 1844 #s inventé
+#f P27 P32
+#marr 30/10/1794 #p Paris,75000,Ville-de-Paris,Ile-de-France,France #s base_michelbonnet

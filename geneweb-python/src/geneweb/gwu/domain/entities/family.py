@@ -104,7 +104,7 @@ class Family:
     
     def has_events(self) -> bool:
         """Vérifie si la famille a des événements additionnels."""
-        return len(self.events) > 0
+        return len(self.events) > 0 or self.marriage is not None
     
     def is_married(self) -> bool:
         """
