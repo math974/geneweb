@@ -18,9 +18,9 @@ make check
 
 ## 📦 Components
 
-- **ged2gwb**: GEDCOM to GeneWeb converter
-- **gedcom**: GEDCOM file parser
-- **lib.db_pickle**: Database pickle utilities for GeneWeb
+- **ged2gwb**: GEDCOM to GeneWeb converter (MessagePack format)
+- **gedcom**: GEDCOM file parser with full note/source support
+- **lib.db**: MessagePack database utilities for GeneWeb
 
 ## 🛠️ Development
 
@@ -72,8 +72,6 @@ make check          # Format + lint + test
 
 # Utilities
 make clean          # Clean temporary files
-make demo           # Run demo with sample.ged
-make demo-uk        # Run demo with uk.ged
 ```
 
 ## 🧪 Testing
@@ -142,16 +140,54 @@ The Makefile provides convenient commands for development:
 - Colorized output
 - Error handling
 
+## 🏗️ Database Architecture
+
+The database uses **MessagePack** format with a modular directory structure similar to OCaml `.gwb`:
+
+```
+bases/
+└── database_name.msgpack/
+    ├── base                    # Main data file (MessagePack)
+    ├── access                  # Access permissions
+    ├── persons                 # Person index
+    ├── families                # Family index
+    ├── strings                 # String index
+    ├── notes_d/                # Notes directory
+    ├── wiznotes/               # Wizard notes directory
+    └── metadata.json           # Database metadata
+```
+
+### Key Features
+
+- **Modular**: Separate files for different data types
+- **Indexed**: Fast search by name, date, relation
+- **Compatible**: Similar to OCaml `.gwb` format
+- **Secure**: MessagePack format (safer than Pickle)
+- **Portable**: Cross-language compatibility
+
+### Migration from Pickle
+
+The new MessagePack format replaces the old Pickle format:
+
+- **Before**: Single `.pkl` file with all data
+- **After**: Directory structure with specialized files
+- **Benefits**: Better security, performance, and maintainability
+
 ## 📚 Usage Examples
 
 ### GEDCOM to GeneWeb Conversion
 
 ```python
-from ged2gwb import convert_gedcom_to_geneweb
+from ged2gwb import Ged2GwbConverter, ConversionOptions
 
-# Convert GEDCOM file
-result = convert_gedcom_to_geneweb('family.ged', 'output.pkl')
-print(f"Converted {result.individuals} individuals and {result.families} families")
+# Convert GEDCOM file to MessagePack database
+options = ConversionOptions(
+    input_file='family.ged',
+    output_file='output.msgpack'
+)
+converter = Ged2GwbConverter(options)
+result = converter.convert()
+print(f"Converted {result['individuals_count']} individuals and {result['families_count']} families")
 ```
 
 ### GEDCOM Parsing
@@ -159,18 +195,32 @@ print(f"Converted {result.individuals} individuals and {result.families} familie
 ```python
 from gedcom import GedcomParser
 
-# Parse GEDCOM file
+# Parse GEDCOM file with full note/source support
 parser = GedcomParser('family.ged')
 individuals = parser.get_individuals()
 families = parser.get_families()
+
+# Access notes and sources
+for individual in individuals:
+    print(f"Notes: {individual.notes}")
+    print(f"Sources: {individual.sources}")
 ```
 
 ### Database Operations
 
 ```python
-from lib.db_pickle import PickleBase
+from lib.db import MessagePackReader, MessagePackWriter
+from lib.db.database.base_data import BaseData
+
+# Create and save database
+data = BaseData()
+# ... add persons, families, etc.
+writer = MessagePackWriter("bases")
+db_path = writer.write_database(data, "my_database")
 
 # Load database
-db = PickleBase('database.pkl')
-individuals = db.get_individuals()
+reader = MessagePackReader("bases")
+db = reader.load_database("my_database")
+persons = db.persons
+families = db.families
 ```

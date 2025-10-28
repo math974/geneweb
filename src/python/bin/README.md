@@ -6,14 +6,14 @@ This directory contains bash wrapper scripts for all Python modules in the GeneW
 
 ### `ged2gwb`
 
-GEDCOM to GeneWeb converter - the main binary for converting GEDCOM files to pickle databases.
+GEDCOM to GeneWeb converter - the main binary for converting GEDCOM files to MessagePack databases.
 
 ```bash
 # Convert a GEDCOM file
-./bin/ged2gwb input.ged --output database.pkl
+./bin/ged2gwb input.ged --output database.msgpack
 
 # Load a database
-./bin/ged2gwb --load database.pkl
+./bin/ged2gwb --load database.msgpack
 
 # Show help
 ./bin/ged2gwb --help
@@ -31,18 +31,6 @@ GEDCOM parser and utilities - for parsing and validating GEDCOM files.
 ./bin/gedcom --help
 ```
 
-### `db-pickle`
-
-Pickle database manager - for managing pickle databases.
-
-```bash
-# Load a pickle database
-./bin/db-pickle database.pkl
-
-# Show help
-./bin/db-pickle --help
-```
-
 ### `geneweb-python`
 
 Generic runner for any Python module in the project.
@@ -51,7 +39,7 @@ Generic runner for any Python module in the project.
 # Run any module
 ./bin/geneweb-python ged2gwb --help
 ./bin/geneweb-python gedcom --version
-./bin/geneweb-python lib.db_pickle
+./bin/geneweb-python lib.db
 ```
 
 ## Installation
@@ -85,15 +73,14 @@ export PATH="/path/to/geneweb/src/python/bin:$PATH"
 After installation, you can use the binaries from anywhere:
 
 ```bash
-# Convert GEDCOM to pickle
-ged2gwb sample.ged --output sample.pkl
+# Convert GEDCOM to MessagePack
+ged2gwb sample.ged --output sample.msgpack
 
 # Load database
-ged2gwb --load sample.pkl
+ged2gwb --load sample.msgpack
 
 # Use other modules
 gedcom --help
-db-pickle --help
 ```
 
 ## Uninstallation
