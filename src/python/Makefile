@@ -182,6 +182,5 @@ clean:
 	@find . -type f -name ".coverage" -delete 2>/dev/null || true
 	@find . -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
 	@find . -type d -name "htmlcov" -exec rm -rf {} + 2>/dev/null || true
-	@echo "$(BLUE)Cleaning gwb2ged test files...$(NC)"
 	@cd gwb2ged && $(MAKE) clean
 	@echo "$(GREEN)✓ Cleanup completed$(NC)"

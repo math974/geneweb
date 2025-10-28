@@ -14,27 +14,27 @@ test-ocaml: test-basic test-indexes
 
 # Test basic gwb2ged functionality
 test-basic:
-	@echo "=== Testing gwb2ged basic export ==="
-	@cd .. && PYTHONPATH=. python3 gwb2ged/tests/ocaml/test_basic_export.py
+	@echo "$(BLUE)Testing gwb2ged basic export...$(NC)"
+	@PYTHONPATH=.. python3 tests/ocaml/test_basic_export.py
 
 # Test gwb2ged -indexes option
 test-indexes:
-	@echo "=== Testing gwb2ged -indexes option ==="
-	@cd .. && PYTHONPATH=. python3 gwb2ged/tests/ocaml/test_indexes_option.py
+	@echo "$(BLUE)Testing gwb2ged -indexes option...$(NC)"
+	@PYTHONPATH=.. python3 tests/ocaml/test_indexes_option.py
 
 # Clean temporary files
 clean:
-	@echo "Cleaning gwb2ged test files..."
-	@rm -rf ../../distribution/bases/test-*
+	@echo "$(BLUE)Cleaning gwb2ged test files...$(NC)"
+	@rm -rf ../distribution/bases/test-*
 	@rm -f /tmp/tmp*.ged
 	@rm -f ../*.gwb ../*.msgpack
 
 # Help
 help:
-	@echo "gwb2ged Test Targets:"
+	@echo "$(BLUE)gwb2ged Test Targets:$(NC)"
 	@echo "  test          - Run all gwb2ged tests"
 	@echo "  test-ocaml    - Run all OCaml binary tests"
-	@echo "  test-basic    - Test basic gwb2ged functionality"
-	@echo "  test-indexes  - Test gwb2ged -indexes option"
-	@echo "  clean         - Clean temporary test files"
-	@echo "  help          - Show this help"
+	@echo "$(GREEN)  test-basic    - Test basic gwb2ged functionality$(NC)"
+	@echo "$(GREEN)  test-indexes  - Test gwb2ged -indexes option$(NC)"
+	@echo "$(GREEN)  clean         - Clean temporary test files$(NC)"
+	@echo "$(GREEN)  help          - Show this help$(NC)"

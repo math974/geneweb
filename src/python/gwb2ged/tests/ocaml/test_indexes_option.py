@@ -9,31 +9,27 @@ import os
 import subprocess
 import tempfile
 from pathlib import Path
+from tools.test_utils import get_absolute_path
 
 def test_gwb2ged_indexes():
     """Simple test for the gwb2ged -indexes option"""
 
-    # Check that we're in the right directory
-    if not os.path.exists("Makefile"):
-        print("ERROR: This script must be run from the GeneWeb project root")
-        return False
-
     # Binary paths
-    gwb2ged_path = "../../distribution/gw/gwb2ged"
-    ged2gwb_path = "../../distribution/gw/ged2gwb"
+    gwb2ged_path = get_absolute_path("distribution/gw/gwb2ged")
+    ged2gwb_path = get_absolute_path("distribution/gw/ged2gwb")
 
     # Check that binaries exist
     if not os.path.exists(gwb2ged_path):
-        print(f"ERROR: gwb2ged binary not found: {gwb2ged_path}")
-        print("Please build GeneWeb first: make")
+        print(f"$(RED)ERROR: gwb2ged binary not found: {gwb2ged_path}$(NC)")
+        print("$(RED)Please build GeneWeb first: make$(NC)")
         return False
 
     if not os.path.exists(ged2gwb_path):
-        print(f"ERROR: ged2gwb binary not found: {ged2gwb_path}")
-        print("Please build GeneWeb first: make")
+        print(f"$(RED)ERROR: ged2gwb binary not found: {ged2gwb_path}$(NC)")
+        print("$(RED)Please build GeneWeb first: make$(NC)")
         return False
 
-    print("✓ Binaries found")
+    print("$(GREEN)✓ Binaries found$(NC)")
 
     # Create a simple GEDCOM test file
     test_gedcom_content = """0 HEAD

@@ -17,12 +17,12 @@ def test_basic_export():
 
     # Check if binaries exist
     if not check_file_exists(gwb2ged_path):
-        print("SKIP: gwb2ged binary not found")
-        return None
+        print("$(YELLOW)SKIP: gwb2ged binary not found$(NC)")
+        return False
 
     if not check_file_exists(ged2gwb_path):
-        print("SKIP: ged2gwb binary not found")
-        return None
+        print("$(YELLOW)SKIP: ged2gwb binary not found$(NC)")
+        return False
 
     # Create a simple GEDCOM file for testing
     test_gedcom_content = """0 HEAD
@@ -63,26 +63,25 @@ def test_basic_export():
             import shutil
             shutil.rmtree(test_db_path)
 
-        print("Creating test database...")
+        print("$(BLUE)Creating test database...$(NC)")
 
         # Create database from GEDCOM
         cmd = [ged2gwb_path, test_gedcom, "-o", test_db_name, "-f"]
         returncode, stdout, stderr = run_command(cmd)
 
         if returncode != 0:
-            print(f"FAIL: Failed to create test database: {stderr}")
-            return None
+            print(f"$(RED)FAIL: Failed to create test database: {stderr}$(NC)")
+            return False
 
-        print("✓ Test database created")
+        print("$(GREEN)✓ Test database created$(NC)")
 
         # Test gwb2ged export
-        print("Testing gwb2ged export...")
         cmd = [gwb2ged_path, test_db_name]
         returncode, stdout, stderr = run_command(cmd)
 
         if returncode != 0:
-            print(f"FAIL: Export failed: {stderr}")
-            return None
+            print(f"$(RED)FAIL: Export failed: {stderr}$(NC)")
+            return False
 
         # Check GEDCOM compliance
         output = stdout + stderr
@@ -95,14 +94,14 @@ def test_basic_export():
         has_version = any("VERS 5.5.1" in line for line in lines)
 
         if not (has_head and has_trlr and has_utf8 and has_version):
-            print("FAIL: GEDCOM minimal compliance checks failed")
+            print("$(RED)FAIL: GEDCOM minimal compliance checks failed$(NC)")
             print(f"  HEAD: {has_head}, TRLR: {has_trlr}, UTF-8: {has_utf8}, VERS: {has_version}")
-            return None
+            return False
 
-        print("✓ GEDCOM compliance verified")
-        print("✓ Basic export test passed")
+        print("$(GREEN)✓ GEDCOM compliance verified$(NC)")
+        print("$(GREEN)✓ Basic export test passed$(NC)")
 
-        return output
+        return True
 
     finally:
         # Cleanup
@@ -111,13 +110,12 @@ def test_basic_export():
         if os.path.exists(test_db_path):
             import shutil
             shutil.rmtree(test_db_path)
-        print("✓ Cleanup completed")
+        print("$(GREEN)✓ Cleanup completed$(NC)")
 
 if __name__ == "__main__":
-    print("=== Testing gwb2ged basic export ===")
     result = test_basic_export()
-    if result is None:
-        print("FAIL")
+    if not result:
+        print("$(RED)FAIL$(NC)")
         sys.exit(1)
-    print("PASS")
+    print("$(GREEN)PASS$(NC)")
     sys.exit(0)
