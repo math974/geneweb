@@ -6,14 +6,14 @@ This directory contains bash wrapper scripts for all Python modules in the GeneW
 
 ### `ged2gwb`
 
-GEDCOM to GeneWeb converter - the main binary for converting GEDCOM files to pickle databases.
+GEDCOM to GeneWeb converter - the main binary for converting GEDCOM files to MessagePack databases.
 
 ```bash
 # Convert a GEDCOM file
-./bin/ged2gwb input.ged --output database.pkl
+./bin/ged2gwb input.ged --output database.msgpack
 
 # Load a database
-./bin/ged2gwb --load database.pkl
+./bin/ged2gwb --load database.msgpack
 
 # Show help
 ./bin/ged2gwb --help
@@ -31,18 +31,6 @@ GEDCOM parser and utilities - for parsing and validating GEDCOM files.
 ./bin/gedcom --help
 ```
 
-### `db-pickle`
-
-Pickle database manager - for managing pickle databases.
-
-```bash
-# Load a pickle database
-./bin/db-pickle database.pkl
-
-# Show help
-./bin/db-pickle --help
-```
-
 ### `geneweb-python`
 
 Generic runner for any Python module in the project.
@@ -51,7 +39,33 @@ Generic runner for any Python module in the project.
 # Run any module
 ./bin/geneweb-python ged2gwb --help
 ./bin/geneweb-python gedcom --version
-./bin/geneweb-python lib.db_pickle
+./bin/geneweb-python lib.db
+```
+
+## Database Format
+
+The binaries now use **MessagePack** format for database storage, replacing the old Pickle format:
+
+### MessagePack Benefits
+
+- **Security**: Safer than Pickle format
+- **Portability**: Cross-language compatibility
+- **Performance**: Faster serialization/deserialization
+- **Structure**: Modular directory layout similar to OCaml `.gwb`
+
+### Database Structure
+
+```
+bases/
+└── database_name.msgpack/
+    ├── base                    # Main data file (MessagePack)
+    ├── access                  # Access permissions
+    ├── persons                 # Person index
+    ├── families                # Family index
+    ├── strings                 # String index
+    ├── notes_d/                # Notes directory
+    ├── wiznotes/               # Wizard notes directory
+    └── metadata.json           # Database metadata
 ```
 
 ## Installation
@@ -85,15 +99,14 @@ export PATH="/path/to/geneweb/src/python/bin:$PATH"
 After installation, you can use the binaries from anywhere:
 
 ```bash
-# Convert GEDCOM to pickle
-ged2gwb sample.ged --output sample.pkl
+# Convert GEDCOM to MessagePack
+ged2gwb sample.ged --output sample.msgpack
 
 # Load database
-ged2gwb --load sample.pkl
+ged2gwb --load sample.msgpack
 
 # Use other modules
 gedcom --help
-db-pickle --help
 ```
 
 ## Uninstallation
@@ -113,11 +126,29 @@ This will:
 
 ## Features
 
+- **MessagePack Database Format**: Modern, secure, and portable database storage
+- **Full GEDCOM Support**: Complete parsing with notes, sources, and multimedia
 - **Automatic virtual environment activation**: Scripts automatically activate the project's virtual environment
 - **Cross-platform compatibility**: Works on Linux, macOS, and Windows (with bash)
 - **Error handling**: Graceful fallback to system Python if virtual environment is not found
 - **Easy installation**: One-command setup for all binaries
 - **Clean uninstallation**: Complete removal of all traces
+
+## Migration from Pickle
+
+If you have existing `.pkl` databases, you can migrate them to the new MessagePack format:
+
+### Manual Migration
+
+1. **Export from Pickle**: Use the old Python tools to export data
+2. **Import to MessagePack**: Use the new `ged2gwb` binary to create MessagePack databases
+
+### Benefits of Migration
+
+- **Better Security**: MessagePack is safer than Pickle
+- **Cross-platform**: Works with other languages and tools
+- **Future-proof**: Active development and maintenance
+- **Performance**: Faster I/O operations
 
 ## Troubleshooting
 
