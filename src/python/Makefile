@@ -167,8 +167,6 @@ clean:
 	@echo "$(BLUE)Cleaning temporary files...$(NC)"
 	@find . -type f -name "*.pyc" -delete 2>/dev/null || true
 	@find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
-	@find . -type f -name "*.pkl" -delete 2>/dev/null || true
-	@find . -type f -name "*.pkl.gz" -delete 2>/dev/null || true
 	@find . -type f -name "*.msgpack" -delete 2>/dev/null || true
 	@find . -type d -name "*.msgpack" -exec rm -rf {} + 2>/dev/null || true
 	@find . -type f -name ".coverage" -delete 2>/dev/null || true
