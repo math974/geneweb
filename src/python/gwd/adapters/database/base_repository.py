@@ -45,12 +45,20 @@ class MessagePackBaseRepository(BaseRepository):
         try:
             with open(file_path, "rb") as f:
                 data = msgpack.unpackb(f.read(), raw=False)
-            base = GenealogyBase(name=base_name)
+            # Les attributs sont différents entre les branches
+            base = GenealogyBase(
+                name=base_name, 
+                path=self.bases_dir,
+                persons={},
+                families={},
+                last_modified="2023-01-01"
+            )
             for p in data.get("persons", []):
                 person = Person(**p)
-                base.add_person(person)
+                base.persons[person.id] = person
             return base
-        except Exception:
+        except Exception as e:
+            print(f"Erreur chargement base {base_name}: {e}")
             return None
     
     def get_person_by_id(self, base_name: str, person_id: int) -> Optional[Person]:

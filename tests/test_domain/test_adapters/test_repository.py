@@ -16,13 +16,15 @@ from gwd.domain.entities.person import Person
 
 
 def make_msgpack_base(tmpdir: Path, base_name: str):
+    """Crée un fichier msgpack de test"""
     persons = [
         {"id": 1, "first_name": "Jean", "surname": "Dupont"},
         {"id": 2, "first_name": "Marie", "surname": "Martin"},
     ]
     data = {"title": "Base Test", "persons": persons}
     file_path = tmpdir / f"{base_name}.msgpack"
-    file_path.write_bytes(msgpack.packb(data, use_bin_type=True))
+    file_path.write_bytes(msgpack.packb(data))
+    print(f"Fichier créé: {file_path} (taille={file_path.stat().st_size})")
     return file_path
 
 
