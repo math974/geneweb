@@ -3,6 +3,7 @@ from typing import TextIO
 from ..models import GedcomHeader
 from .base import RecordExporter
 
+
 class HeaderExporter(RecordExporter):
     """Exporter for GEDCOM header records."""
 

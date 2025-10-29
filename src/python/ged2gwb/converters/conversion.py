@@ -12,6 +12,7 @@ from lib.db.models.family import GenFamily
 from lib.db.models.person import GenPerson
 from lib.db.models.relations import GenCouple
 
+
 class GedcomConverter:
     """Converter for GEDCOM data structures to GeneWeb format."""
 
@@ -47,7 +48,11 @@ class GedcomConverter:
                     birth_date = self.convert_date(individual.birth.date)
                 if individual.birth.place:
                     # Extract place name from GedcomPlace
-                    birth_place = individual.birth.place.name if hasattr(individual.birth.place, 'name') else str(individual.birth.place)
+                    birth_place = (
+                        individual.birth.place.name
+                        if hasattr(individual.birth.place, "name")
+                        else str(individual.birth.place)
+                    )
 
             baptism_date = None
             if individual.baptism and individual.baptism.date:
@@ -60,7 +65,11 @@ class GedcomConverter:
                     death_date = self.convert_date(individual.death.date)
                 if individual.death.place:
                     # Extract place name from GedcomPlace
-                    death_place = individual.death.place.name if hasattr(individual.death.place, 'name') else str(individual.death.place)
+                    death_place = (
+                        individual.death.place.name
+                        if hasattr(individual.death.place, "name")
+                        else str(individual.death.place)
+                    )
 
             burial_date = None
             if individual.burial and individual.burial.date:
@@ -107,20 +116,12 @@ class GedcomConverter:
 
             # Add birth event with place if place exists
             if birth_place:
-                birth_event = Event(
-                    name="BIRT",
-                    date=birth_date,
-                    place=birth_place
-                )
+                birth_event = Event(name="BIRT", date=birth_date, place=birth_place)
                 person.events.append(birth_event)
 
             # Add death event with place if place exists
             if death_place:
-                death_event = Event(
-                    name="DEAT",
-                    date=death_date,
-                    place=death_place
-                )
+                death_event = Event(name="DEAT", date=death_date, place=death_place)
                 person.events.append(death_event)
 
             # Apply default source if specified and no sources exist
@@ -162,7 +163,11 @@ class GedcomConverter:
                     marriage_date = self.convert_date(family.marriage.date)
                 if family.marriage.place:
                     # Extract place name from GedcomPlace
-                    marriage_place = family.marriage.place.name if hasattr(family.marriage.place, 'name') else str(family.marriage.place)
+                    marriage_place = (
+                        family.marriage.place.name
+                        if hasattr(family.marriage.place, "name")
+                        else str(family.marriage.place)
+                    )
 
             divorce_status = DivorceStatus.NOT_DIVORCED
             divorce_date = None
@@ -173,7 +178,11 @@ class GedcomConverter:
                     divorce_date = self.convert_date(family.divorce.date)
                 if family.divorce.place:
                     # Extract place name from GedcomPlace
-                    divorce_place = family.divorce.place.name if hasattr(family.divorce.place, 'name') else str(family.divorce.place)
+                    divorce_place = (
+                        family.divorce.place.name
+                        if hasattr(family.divorce.place, "name")
+                        else str(family.divorce.place)
+                    )
 
             husband_id = dummy_iper()
             if family.husband:

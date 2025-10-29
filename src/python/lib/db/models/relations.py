@@ -14,7 +14,7 @@ from ..core.types import Ifam, Iper
 class GenAscend:
     """Ascendants model for person parents."""
 
-    parents: Optional[List[Iper]] = None
+    parents: Optional[Ifam] = None
     consang: float = 0.0
 
 

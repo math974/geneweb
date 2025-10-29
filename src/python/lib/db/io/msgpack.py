@@ -170,14 +170,13 @@ class MessagePackWriter:
         }
 
     def _serialize_ascend(self, ascend) -> Dict[str, Any]:
-        """Serialize ascend to dictionary."""
-        # Handle both list and single int cases
-        if isinstance(ascend.parents, list):
-            parents = [str(p) for p in ascend.parents]
-        elif isinstance(ascend.parents, int):
-            parents = [str(ascend.parents)]
-        else:
-            parents = []
+        """Serialize ascend to dictionary.
+
+        In OCaml: gen_ascend.parents is 'family option (Ifam option),
+        not a list. We serialize it as a single Ifam ID or None.
+        """
+        # parents is Ifam (family ID), not a list of Iper
+        parents = str(ascend.parents) if ascend.parents else None
 
         return {
             "parents": parents,
@@ -504,13 +503,28 @@ class MessagePackReader:
 
     def _deserialize_ascend(self, data: Dict[str, Any]) -> GenAscend:
         """Deserialize ascend from dictionary."""
-        from ..core.types import Iper
+        from ..core.types import Ifam
         from ..models.relations import GenAscend
 
+        # Handle both old format (list) and new format (single Ifam)
+        parents_value = data.get("parents")
+        if parents_value is None:
+            parents = None
+        elif isinstance(parents_value, list):
+            # Old format: list (backward compatibility)
+            if len(parents_value) > 0:
+                parents = Ifam(int(parents_value[0]))
+            else:
+                parents = None
+        else:
+            # New format: single Ifam ID (string or int)
+            try:
+                parents = Ifam(int(parents_value))
+            except (ValueError, TypeError):
+                parents = None
+
         return GenAscend(
-            parents=[Iper(int(p)) for p in data.get("parents", [])]
-            if data.get("parents")
-            else None,
+            parents=parents,
             consang=data.get("consang", 0.0),
         )
 
