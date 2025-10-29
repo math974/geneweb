@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}{{ person.display_name }} - GeneWeb{% endblock %}
+
+{% block header %}
+<h1>{{ person.display_name }}</h1>
+{% if person.occ > 0 %}<span class="occ">({{ person.occ }})</span>{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="person-info">
+    <h2>Informations personnelles</h2>
+    
+    {% if person.birth %}
+    <p><strong>Né(e) :</strong> {{ person.birth }}</p>
+    {% endif %}
+    
+    {% if person.birth_place %}
+    <p><strong>Lieu de naissance :</strong> {{ person.birth_place }}</p>
+    {% endif %}
+    
+    {% if person.death %}
+    <p><strong>Décédé(e) :</strong> {{ person.death }}</p>
+    {% endif %}
+    
+    {% if person.death_place %}
+    <p><strong>Lieu de décès :</strong> {{ person.death_place }}</p>
+    {% endif %}
+
+    {% if person.notes %}
+    <div class="notes">
+        <h3>Notes</h3>
+        <p>{{ person.notes }}</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Menu de navigation -->
+<nav class="person-menu">
+    <a href="/{{ base_name }}/person/{{ person.id }}?m=A">Ascendance</a>
+    <a href="/{{ base_name }}/person/{{ person.id }}?m=D">Descendance</a>
+    <a href="/{{ base_name }}/person/{{ person.id }}?m=F">Famille</a>
+    <a href="/{{ base_name }}/search">Rechercher</a>
+</nav>
+{% endblock %}
+
+{% block footer %}
+<p><a href="/{{ base_name }}">Retour à la base {{ base_name }}</a></p>
+{% endblock %}
