@@ -8,12 +8,18 @@ import sys
 import os
 import subprocess
 import tempfile
+
 import shutil
 
 def test_gwb2ged_charset():
     """Test gwb2ged with different charset options"""
 
     print("=== Test GWB2GED -charset Option ===\n")
+
+    # Change to project root to ensure correct paths
+    from tools.test_utils import get_project_root
+    project_root = get_project_root()
+    os.chdir(str(project_root))
 
     # Check that we're in the right directory
     if not os.path.exists("Makefile"):
@@ -68,7 +74,8 @@ def test_gwb2ged_charset():
         test_gedcom = f.name
 
     test_db_name = "test-charset"
-    test_db_path = f"distribution/bases/{test_db_name}"
+    bases_dir = get_project_root() / "distribution" / "bases"
+    test_db_path = os.path.join(bases_dir, test_db_name)
 
     # Test each charset option
     charsets = ["UTF-8", "ASCII", "ANSEL", "ANSI"]

@@ -1,3 +1,1 @@
-"""
-Tests for gwb2ged module
-"""
+# gwb2ged tests package

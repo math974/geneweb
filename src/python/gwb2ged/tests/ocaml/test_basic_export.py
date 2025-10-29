@@ -7,11 +7,14 @@ Creates a temporary database using ged2gwb and tests gwb2ged export
 import sys
 import os
 import tempfile
-import subprocess
 from tools.test_utils import get_absolute_path, check_file_exists, run_command
 
 def test_basic_export():
     """Test basic export without options - minimal compliance checks."""
+    # Change to project root to ensure correct paths
+    from tools.test_utils import get_project_root, change_to_project_root
+    change_to_project_root()
+
     gwb2ged_path = get_absolute_path("distribution/gw/gwb2ged")
     ged2gwb_path = get_absolute_path("distribution/gw/ged2gwb")
 
@@ -55,7 +58,8 @@ def test_basic_export():
         test_gedcom = f.name
 
     test_db_name = "test-basic-export"
-    test_db_path = f"distribution/bases/{test_db_name}"
+    bases_dir = get_absolute_path("distribution/bases")
+    test_db_path = os.path.join(bases_dir, test_db_name)
 
     try:
         # Clean up existing test database
