@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+    <title>{{ base_name }} - GeneWeb</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>{{ base_name }}</h1>
+            <p>Base généalogique GeneWeb</p>
+        </header>
+        
+        <main>
+            <div class="stats">
+                <div class="stat">
+                    <h3>{{ persons_count }}</h3>
+                    <p>Personnes</p>
+                </div>
+                <div class="stat">
+                    <h3>{{ families_count }}</h3>
+                    <p>Familles</p>
+                </div>
+            </div>
+            
+            <nav class="main-menu">
+                <a href="/{{ base_name }}/search">Rechercher</a>
+                <a href="/{{ base_name }}/stats">Statistiques</a>
+                <a href="/{{ base_name }}/help">Aide</a>
+            </nav>
+        </main>
+    </div>
+</body>
+</html>

@@ -1,0 +1,17 @@
+# Golden Masters pour gwd
+#
+# Par défaut, nous committons tous les golden masters pour servir de référence.
+# Si vous voulez ignorer certaines bases, décommentez les lignes ci-dessous:
+
+# Ignorer les fichiers temporaires
+*.tmp
+*.backup
+*.bak
+
+# Ignorer les bases de test locales (optionnel)
+# test_local/
+# my_test_base/
+
+# Les golden masters de production doivent être committés!
+# Ne pas ignorer les fichiers .html ici
+

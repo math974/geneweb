@@ -1,0 +1,175 @@
+encoding: utf-8
+gwplus
+
+fam Galichet Jean_Pierre #occu Marchand_de_bois #src déjà_décédés_au_mariage_de_sa_fille_Thérèse_Eugénie 0 <1849 + Loche Marie_Elisabeth #src déjà_décédés_au_mariage_de_sa_fille_Thérèse_Eugénie 0 <1849
+src déjà_décédés_au_mariage_de_sa_fille_Thérèse_Eugénie
+csrc rajout_de_2_enfants_pour_test
+fevt
+#marr 
+end fevt
+beg
+- h Jean_Charles #occu Négociant #src témoin_au_mariage_de_sa_soeur_Thérèse_Eugénie 1813 #bs 1849-36ans od
+- h Pierre 1814 1/1/1835
+- h Paul 1816 1/1/1886
+- h lolo #src inventé 1818 od
+- f Thérèse_Eugénie #src inscription_des_hypothèques_du_23_février_1874_au_profit_de_dame_thérèse_eugènie_Galichet;_voir_ses_ascendants_dans_la_base_<a_href="https://gw.geneanet.org/mout?lang=fr&p=therese+eugenie&n=galichet">mout</a> 7/9/1830 #bp _[Châlons-sur-Marne]_-_Châlons-en-Champagne,51,Marne,Champagne-Ardenne,France #bs acte_de_mariage od
+end
+
+pevt Galichet Jean_Charles
+#birt 1813 #s 1849-36ans
+#deat 
+end pevt
+
+pevt Galichet Pierre
+#birt 1814
+#deat 1/1/1835
+end pevt
+
+pevt Galichet Paul
+#birt 1816
+#deat 1/1/1886
+end pevt
+
+pevt Galichet lolo
+#birt 1818
+#deat 
+end pevt
+
+pevt Galichet Thérèse_Eugénie
+#birt 7/9/1830 #p _[Châlons-sur-Marne]_-_Châlons-en-Champagne,51,Marne,Champagne-Ardenne,France #s acte_de_mariage
+#deat 
+end pevt
+
+pevt Loche Marie_Elisabeth
+#deat <1849
+end pevt
+
+pevt Galichet Jean_Pierre
+#deat <1849
+end pevt
+
+fam Galichet Paul +3/3/1835 Marty Florence #src archives 1/1/1815 1875
+src archives
+csrc archives
+fevt
+#marr 3/3/1835
+end fevt
+beg
+- h Jean-Paul 2/2/1836 od
+- f Laure 1839 od
+end
+
+pevt Galichet Jean-Paul
+#birt 2/2/1836
+end pevt
+
+pevt Galichet Laure
+#birt 1839
+end pevt
+
+pevt Marty Florence
+#birt 1/1/1815
+#deat 1875
+end pevt
+
+fam Galichet lolo +1840 #mp Brisbane,Queensland,Australie #ms inventé femme1 prenom1 #src inventé 1818 od
+fevt
+#marr 1840 #p Brisbane,Queensland,Australie #s inventé
+#div 1844 #s inventé
+end fevt
+fam Galichet lolo +1845 #mp Sydney,Nouvelle-Galles\_du\_Sud,Australie #ms inventé femme2 prenom2 #src inventé 1825 od
+fevt
+#marr 1845 #p Sydney,Nouvelle-Galles\_du\_Sud,Australie #s inventé
+end fevt
+
+pevt femme1 prenom1
+#birt 1818
+end pevt
+
+pevt femme2 prenom2
+#birt 1825
+end pevt
+
+fam Sutaine Louis.1 0 +1570 #mp _[Saint-Jacques]_-_Reims,51,Marne,Champagne-Ardenne,France Galichet Nicole
+fevt
+#marr 1570 #p _[Saint-Jacques]_-_Reims,51,Marne,Champagne-Ardenne,France
+end fevt
+beg
+- h Louis 1575 0
+end
+
+fam Sutaine Louis 1575 + #mp _[Saint-Jacques]_-_Reims,51,Marne,Champagne-Ardenne,France Petizon Claude
+fevt
+#marr  #p _[Saint-Jacques]_-_Reims,51,Marne,Champagne-Ardenne,France
+end fevt
+beg
+- f Perrette 1600 11/4/1684 #dp _[Saint-Jacques]_-_Reims,51,Marne,Champagne-Ardenne,France
+end
+
+fam Jayot Jean 1604 8/11/1674 + Sutaine Perrette 1600 11/4/1684
+fevt
+#marr 
+end fevt
+beg
+- f Claude 27/6/1633 11/4/1697 #dp _[Saint-Hilaire]_-_Reims,51,Marne,Champagne-Ardenne,France
+end
+
+fam Boizot Jean.1234 #occu Menuisier 1618 22/3/1702 + Jayot Claude 27/6/1633 11/4/1697
+fevt
+#marr 
+end fevt
+beg
+- f Jeanne.1 27/2/1671 #bp _[Saint-Jacques]_-_Reims,51,Marne,Champagne-Ardenne,France 22/4/1748 #dp _[Saint-Hilaire]_-_Reims,51,Marne,Champagne-Ardenne,France
+end
+
+fam Geruzet Anthoine.1 #occu Menuisier_à_Paris_(Paroisse_St_Roch) 1640 17/1/1709 + Bouquet Louise
+fevt
+#marr 
+end fevt
+beg
+- h Anthoine #occu Maître_Menuisier_reçu_le_25.01.1695_à_Reims 1667 #bp _[Saint-Roch]_-_Paris,75,Ville-de-Paris,Ile-de-France,France 16/2/1755 #dp _[Saint-Symphorien]_-_Reims,51,Marne,Champagne-Ardenne,France
+end
+
+fam Geruzet Anthoine #occu Maître_Menuisier_reçu_le_25.01.1695_à_Reims +17/1/1695 #mp _[Saint-Jacques]_-_Reims,51,Marne,Champagne-Ardenne,France Boizot Jeanne.1 27/2/1671 22/4/1748
+fevt
+#marr 17/1/1695 #p _[Saint-Jacques]_-_Reims,51,Marne,Champagne-Ardenne,France
+end fevt
+beg
+- h Jacques #occu Marchand 4/2/1705 #bp _[Saint-Symphorien]_-_Reims,51,Marne,Champagne-Ardenne,France 10/3/1774 #dp _[Saint_Pierre]_-_Reims,51,Marne,Champagne-Ardenne,France
+end
+
+fam Geruzet Jacques #occu Marchand +2/8/1728 #mp _[Saint_Pierre]_-_Reims,51,Marne,Champagne-Ardenne,France Pierquin Jeanne
+fevt
+#marr 2/8/1728 #p _[Saint_Pierre]_-_Reims,51,Marne,Champagne-Ardenne,France
+end fevt
+beg
+- h Laurent #occu Marchand_Drapier,_Changeur_du_Roy 25/9/1738 #bp _[Saint_Pierre]_-_Reims,51,Marne,Champagne-Ardenne,France 1812 #dp Laon,02,Aisne,Picardie,France
+- f Marie-Jeanne 31/12/1751 8/1/1830 #dp Soissons,02,Aisne,Picardie,France
+end
+
+fam Geruzet Laurent #occu Marchand_Drapier,_Changeur_du_Roy +28/12/1763 #mp _[Eglise_St_Rémi]_-_Laon,02,Aisne,Picardie,France Dupond Marie 1736 25/11/1784
+fevt
+#marr 28/12/1763 #p _[Eglise_St_Rémi]_-_Laon,02,Aisne,Picardie,France
+end fevt
+beg
+- h Jean-Baptiste #occu Officier_d'infanterie,_marchand_teinturier 23/9/1768 #bp Laon,02,Aisne,Picardie,France 20/5/1846 #dp Laon,02,Aisne,Picardie,France
+end
+
+fam Geruzet Laurent #occu Marchand_Drapier,_Changeur_du_Roy +25/3/1786 #mp Reims,51,Marne,Champagne-Ardenne,France #ms base_michelbonnet Laramee Charlotte #src base_michelbonnet 1766 14/6/1789
+fevt
+#marr 25/3/1786 #p Reims,51,Marne,Champagne-Ardenne,France #s base_michelbonnet
+end fevt
+
+fam Geruzet Laurent #occu Marchand_Drapier,_Changeur_du_Roy +30/10/1794 #mp Paris,75000,Ville-de-Paris,Ile-de-France,France #ms base_michelbonnet Fache Jeanne #src base_michelbonnetg ~1750
+fevt
+#marr 30/10/1794 #p Paris,75000,Ville-de-Paris,Ile-de-France,France #s base_michelbonnet
+end fevt
+
+fam Geruzet Jean-Baptiste #occu Officier_d'infanterie,_marchand_teinturier +21/12/2 #mp _[Mairie]_-_Reims,51,Marne,Champagne-Ardenne,France Biemont Marie
+fevt
+#marr 21/12/2 #p _[Mairie]_-_Reims,51,Marne,Champagne-Ardenne,France
+end fevt
+beg
+- f Laurence 23/1/1802 #bp Nonancourt,27,Eure,Normandie,France 18/4/1866 #dp Amiens,80,Somme,Picardie,France
+end
+

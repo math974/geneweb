@@ -1,0 +1,1 @@
+"""Middleware adapters GeneWeb GWD"""
