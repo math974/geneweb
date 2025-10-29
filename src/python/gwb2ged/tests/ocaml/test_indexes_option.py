@@ -13,6 +13,10 @@ from tools.test_utils import get_absolute_path
 
 def test_gwb2ged_indexes():
     """Simple test for the gwb2ged -indexes option"""
+    # Change to project root to ensure correct paths
+    from tools.test_utils import get_project_root
+    project_root = get_project_root()
+    os.chdir(str(project_root))
 
     # Binary paths
     gwb2ged_path = get_absolute_path("distribution/gw/gwb2ged")
@@ -62,7 +66,8 @@ def test_gwb2ged_indexes():
         test_gedcom = f.name
 
     test_db_name = "test-indexes"
-    test_db_path = f"distribution/bases/{test_db_name}"
+    bases_dir = get_absolute_path("distribution/bases")
+    test_db_path = os.path.join(bases_dir, test_db_name)
 
     # Initialize output files variables
     output_no_indexes = None

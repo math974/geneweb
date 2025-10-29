@@ -8,12 +8,12 @@ YELLOW = \033[0;33m
 BLUE = \033[0;34m
 NC = \033[0m # No Color
 
-.PHONY: test test-ocaml test-basic test-indexes test-charset clean help
+.PHONY: test test-ocaml test-python test-golden test-basic test-indexes test-charset clean help
 
 # Default target
 all: test
 
-# Run all gwb2ged tests
+# Run all gwb2ged tests (OCaml only by default)
 test: test-ocaml
 
 # Run all OCaml binary tests (automatically discovers all test files)
@@ -64,13 +64,40 @@ clean:
 	@rm -f ../*.gwb ../*.msgpack 2>/dev/null || true
 	@echo "$(GREEN)✓ Cleanup completed$(NC)"
 
+# Run all Python binary tests (when Python version is implemented)
+test-python:
+	@echo "$(BLUE)Testing gwb2ged Python implementation...$(NC)"
+	@if ! PYTHONPATH=.. USE_PYTHON_GWB2GED=true python3 -m gwb2ged --help >/dev/null 2>&1; then \
+		echo "$(YELLOW)SKIP: Python gwb2ged not implemented yet$(NC)"; \
+		exit 0; \
+	else \
+		cd .. && USE_PYTHON_GWB2GED=true PYTHONPATH=. python3 gwb2ged/tests/python/test_basic_export_python.py; \
+	fi
+
+# Run golden master test (compare Python vs OCaml output)
+test-golden:
+	@echo "$(BLUE)Running golden master test (Python vs OCaml)...$(NC)"
+	@if [ ! -x ../../../distribution/gw/gwb2ged ]; then \
+		echo "$(YELLOW)SKIP: OCaml gwb2ged binary not found$(NC)"; \
+		exit 0; \
+	elif ! PYTHONPATH=.. USE_PYTHON_GWB2GED=true python3 -m gwb2ged --help >/dev/null 2>&1; then \
+		echo "$(YELLOW)SKIP: Python gwb2ged not implemented yet$(NC)"; \
+		exit 0; \
+	else \
+		cd .. && PYTHONPATH=. python3 gwb2ged/tests/golden_master.py; \
+	fi
+
 # Help
 help:
 	@echo "gwb2ged Test Targets:"
-	@echo "  test          - Run all gwb2ged tests"
+	@echo "  test          - Run all OCaml gwb2ged tests (reference)"
 	@echo "  test-ocaml    - Run all OCaml binary tests"
+	@echo "  test-python   - Run all Python binary tests"
+	@echo "  test-golden   - Compare Python vs OCaml output (golden master)"
 	@echo "  test-basic    - Test basic gwb2ged functionality"
 	@echo "  test-indexes  - Test gwb2ged -indexes option"
 	@echo "  test-charset  - Test gwb2ged -charset option"
 	@echo "  clean         - Clean temporary test files"
 	@echo "  help          - Show this help"
+	@echo ""
+	@echo "To test Python version: USE_PYTHON_GWB2GED=true make test-python"
