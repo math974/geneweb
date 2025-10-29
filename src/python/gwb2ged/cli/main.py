@@ -4,7 +4,6 @@ import argparse
 import logging
 import sys
 from pathlib import Path
-from typing import Optional
 
 from ..core.options import ExportOptions, Charset, NoNotes
 from ..core.exporter import Gwb2GedExporter
