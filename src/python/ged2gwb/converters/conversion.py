@@ -7,11 +7,10 @@ This module contains all conversion functions from GEDCOM to GeneWeb data struct
 from typing import List, Tuple
 from lib.db.core.enums import DivorceStatus, RelationKind, Sex
 from lib.db.core.types import Iper, dummy_iper
-from lib.db.models.events import Date
+from lib.db.models.events import Date, Event
 from lib.db.models.family import GenFamily
 from lib.db.models.person import GenPerson
 from lib.db.models.relations import GenCouple
-
 
 class GedcomConverter:
     """Converter for GEDCOM data structures to GeneWeb format."""
@@ -42,16 +41,26 @@ class GedcomConverter:
                 sex = Sex.FEMALE
 
             birth_date = None
-            if individual.birth and individual.birth.date:
-                birth_date = self.convert_date(individual.birth.date)
+            birth_place = None
+            if individual.birth:
+                if individual.birth.date:
+                    birth_date = self.convert_date(individual.birth.date)
+                if individual.birth.place:
+                    # Extract place name from GedcomPlace
+                    birth_place = individual.birth.place.name if hasattr(individual.birth.place, 'name') else str(individual.birth.place)
 
             baptism_date = None
             if individual.baptism and individual.baptism.date:
                 baptism_date = self.convert_date(individual.baptism.date)
 
             death_date = None
-            if individual.death and individual.death.date:
-                death_date = self.convert_date(individual.death.date)
+            death_place = None
+            if individual.death:
+                if individual.death.date:
+                    death_date = self.convert_date(individual.death.date)
+                if individual.death.place:
+                    # Extract place name from GedcomPlace
+                    death_place = individual.death.place.name if hasattr(individual.death.place, 'name') else str(individual.death.place)
 
             burial_date = None
             if individual.burial and individual.burial.date:
@@ -96,6 +105,24 @@ class GedcomConverter:
                 sources=sources_text,
             )
 
+            # Add birth event with place if place exists
+            if birth_place:
+                birth_event = Event(
+                    name="BIRT",
+                    date=birth_date,
+                    place=birth_place
+                )
+                person.events.append(birth_event)
+
+            # Add death event with place if place exists
+            if death_place:
+                death_event = Event(
+                    name="DEAT",
+                    date=death_date,
+                    place=death_place
+                )
+                person.events.append(death_event)
+
             # Apply default source if specified and no sources exist
             if self.options and self.options.default_source:
                 # Check if individual has any sources
@@ -129,31 +156,70 @@ class GedcomConverter:
         """Convert GEDCOM family to GenFamily."""
         try:
             marriage_date = None
-            if family.marriage and family.marriage.date:
-                marriage_date = self.convert_date(family.marriage.date)
+            marriage_place = None
+            if family.marriage:
+                if family.marriage.date:
+                    marriage_date = self.convert_date(family.marriage.date)
+                if family.marriage.place:
+                    # Extract place name from GedcomPlace
+                    marriage_place = family.marriage.place.name if hasattr(family.marriage.place, 'name') else str(family.marriage.place)
 
             divorce_status = DivorceStatus.NOT_DIVORCED
+            divorce_date = None
+            divorce_place = None
             if family.divorce:
                 divorce_status = DivorceStatus.DIVORCED
+                if family.divorce.date:
+                    divorce_date = self.convert_date(family.divorce.date)
+                if family.divorce.place:
+                    # Extract place name from GedcomPlace
+                    divorce_place = family.divorce.place.name if hasattr(family.divorce.place, 'name') else str(family.divorce.place)
 
             husband_id = dummy_iper()
             if family.husband:
-                if family.husband.startswith("@I") and family.husband.endswith("@"):
-                    husband_id = Iper(int(family.husband[2:-1]))
+                # Handle both formats: "@I1@" or "I1" (stripped)
+                husband_str = family.husband.strip("@")
+                if husband_str.startswith("I") or husband_str.isdigit():
+                    try:
+                        # Extract number: "I1" -> 1, "1" -> 1, "@I1@" -> 1
+                        if husband_str.startswith("I"):
+                            husband_id = Iper(int(husband_str[1:]))
+                        else:
+                            husband_id = Iper(int(husband_str))
+                    except (ValueError, IndexError):
+                        husband_id = Iper(hash(family.husband) % 1000000)
                 else:
                     husband_id = Iper(hash(family.husband) % 1000000)
 
             wife_id = dummy_iper()
             if family.wife:
-                if family.wife.startswith("@I") and family.wife.endswith("@"):
-                    wife_id = Iper(int(family.wife[2:-1]))
+                # Handle both formats: "@I2@" or "I2" (stripped)
+                wife_str = family.wife.strip("@")
+                if wife_str.startswith("I") or wife_str.isdigit():
+                    try:
+                        # Extract number: "I2" -> 2, "2" -> 2, "@I2@" -> 2
+                        if wife_str.startswith("I"):
+                            wife_id = Iper(int(wife_str[1:]))
+                        else:
+                            wife_id = Iper(int(wife_str))
+                    except (ValueError, IndexError):
+                        wife_id = Iper(hash(family.wife) % 1000000)
                 else:
                     wife_id = Iper(hash(family.wife) % 1000000)
 
             children_ids = []
             for child_ref in family.children:
-                if child_ref.startswith("@I") and child_ref.endswith("@"):
-                    child_id = Iper(int(child_ref[2:-1]))
+                # Handle both formats: "@I3@" or "I3" (stripped)
+                child_str = child_ref.strip("@")
+                if child_str.startswith("I") or child_str.isdigit():
+                    try:
+                        # Extract number: "I3" -> 3, "3" -> 3, "@I3@" -> 3
+                        if child_str.startswith("I"):
+                            child_id = Iper(int(child_str[1:]))
+                        else:
+                            child_id = Iper(int(child_str))
+                    except (ValueError, IndexError):
+                        child_id = Iper(hash(child_ref) % 1000000)
                 else:
                     child_id = Iper(hash(child_ref) % 1000000)
                 children_ids.append(child_id)
@@ -169,7 +235,10 @@ class GedcomConverter:
 
             geneweb_family = GenFamily(
                 marriage=marriage_date,
+                marriage_place=marriage_place or "",
                 divorce=divorce_status,
+                divorce_date=divorce_date,
+                divorce_place=divorce_place or "",
                 relation=RelationKind.MARRIED,
                 notes=notes_text,
                 sources=sources_text,

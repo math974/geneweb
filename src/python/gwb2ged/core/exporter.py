@@ -1,13 +1,16 @@
 """Main exporter for gwb2ged"""
 
 import logging
+import sys
 from pathlib import Path
 from typing import Optional
 
 from lib.db.io.msgpack import MessagePackReader
 from lib.db.database.base import Base
+from gedcom.exporter import GedcomExporter
 
 from .options import ExportOptions
+from .converter import BaseToGedcomConverter
 
 
 class Gwb2GedExporter:
@@ -37,6 +40,7 @@ class Gwb2GedExporter:
         if base_dir is None:
             # Try to find distribution/bases from project root
             from tools.test_utils import get_project_root
+
             project_root = get_project_root()
             base_dir = project_root / "distribution" / "bases"
         else:
@@ -46,58 +50,53 @@ class Gwb2GedExporter:
         self.logger.debug(f"Loading database from: {base_dir}")
         reader = MessagePackReader(str(base_dir))
         data = reader.load_database(database_name)
-        base = Base(data)
+        base = Base(data, db_name=database_name, data_dir=str(base_dir))
 
-        self.logger.info(f"Loaded database: {base.nb_of_persons()} persons, "
-                        f"{base.nb_of_families()} families")
+        self.logger.info(
+            f"Loaded database: {base.nb_of_persons()} persons, "
+            f"{base.nb_of_families()} families"
+        )
 
-        # Get output stream
-        output_stream, close_func = self.options.get_output_stream()
+        # Convert Base to GEDCOM
+        self.logger.debug("Converting Base to GEDCOM format")
+        converter = BaseToGedcomConverter(base, self.options)
+        gedcom_db = converter.convert()
 
-        try:
-            # Export to GEDCOM
-            self._export_gedcom(base, output_stream, database_name)
-            self.logger.info("Export completed successfully")
-
-        finally:
-            close_func()
-
-    def _export_gedcom(self, base: Base, output: any, database_name: str) -> None:
-        """
-        Export base to GEDCOM format
-
-        Args:
-            base: GeneWeb Base object
-            output: Output stream (file-like object)
-            database_name: Name of the database
-        """
-        # TODO: Implement full GEDCOM export
-        # For now, create a basic GEDCOM structure
-
-        # Write HEAD
-        output.write("0 HEAD\n")
-        output.write("1 SOUR GeneWeb\n")
-        output.write("2 VERS 0.1.0\n")
-        output.write("2 NAME gwb2ged\n")
-        output.write("1 GEDC\n")
-
-        # Write charset
-        if self.options.charset.value == "UTF-8":
-            output.write("2 VERS 5.5.1\n")
-        else:
-            output.write("2 VERS 5.5\n")
-
-        output.write("2 FORM LINEAGE-LINKED\n")
-        output.write(f"1 CHAR {self.options.charset.value}\n")
-
+        # Export GEDCOM
         if self.options.output_file:
-            output.write(f"1 FILE {Path(self.options.output_file).name}\n")
+            # Export to file
+            self.logger.info(f"Exporting to file: {self.options.output_file}")
+            gedcom_exporter = GedcomExporter()
+            encoding = self._get_encoding()
+            gedcom_exporter.export_file(
+                self.options.output_file, gedcom_db, encoding=encoding
+            )
+        else:
+            # Export to stdout
+            self.logger.debug("Exporting to stdout")
+            gedcom_exporter = GedcomExporter()
+            encoding = self._get_encoding()
+            # Reopen stdout with correct encoding if needed
+            if encoding != "utf-8":
+                import io
 
-        # TODO: Export persons and families
-        # This requires implementing the full conversion from Base to GEDCOM
-        # For now, just write TRLR
-        output.write("0 TRLR\n")
+                output = io.TextIOWrapper(
+                    sys.stdout.buffer, encoding=encoding, errors="replace"
+                )
+                gedcom_exporter.export_content(output, gedcom_db)
+            else:
+                gedcom_exporter.export_content(sys.stdout, gedcom_db)
 
-        if self.options.verbose:
-            self.logger.debug("Wrote basic GEDCOM structure (full export not yet implemented)")
+        self.logger.info("Export completed successfully")
 
+    def _get_encoding(self) -> str:
+        """Get encoding based on charset option"""
+        charset_encoding_map = {
+            "UTF-8": "utf-8",
+            "ASCII": "ascii",
+            "ANSI": "cp1252",  # ANSI is Windows-1252
+        }
+        charset = self.options.charset.value
+        if charset == "ANSEL":
+            raise NotImplementedError("ANSEL encoding is not supported. Please use UTF-8, ASCII, or ANSI (Windows-1252).")
+        return charset_encoding_map.get(charset, "utf-8")

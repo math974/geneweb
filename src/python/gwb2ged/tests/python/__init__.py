@@ -1,2 +1,2 @@
-# Tests for Python gwb2ged implementation
+"""Python tests for gwb2ged implementation"""
 

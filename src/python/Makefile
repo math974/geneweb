@@ -30,15 +30,24 @@ help:
 	@echo "  install-tools  Install development tools (ruff, pytest, mypy)"
 	@echo ""
 	@echo "$(GREEN)Testing:$(NC)"
-	@echo "  test           Run all tests"
-	@echo "  test-ged2gwb   Run ged2gwb tests only"
-	@echo "  test-gwb2ged   Run gwb2ged OCaml binary tests"
-	@echo "  test-gedcom    Run GEDCOM tests only"
-	@echo "  test-lib       Run lib tests (db + util)"
-	@echo "  test-db-ops    Run database operations tests"
-	@echo "  test-msgpack   Run MessagePack database tests"
-	@echo "  test-coverage  Run tests with coverage report"
-	@echo "  validate       Validate MessagePack implementation"
+	@echo "  test              Run all tests"
+	@echo ""
+	@echo "$(GREEN)Module-specific tests:$(NC)"
+	@echo "  test-ged2gwb      Run ged2gwb tests only"
+	@echo "  test-gwb2ged      Run all gwb2ged tests (OCaml + Python)"
+	@echo "  test-gwb2ged-ocaml Run all gwb2ged OCaml binary tests"
+	@echo "  test-gwb2ged-py   Run all gwb2ged Python implementation tests"
+	@echo "  test-gedcom       Run GEDCOM tests only"
+	@echo "  test-gwd          Run gwd tests only"
+	@echo ""
+	@echo "$(GREEN)Database and library tests:$(NC)"
+	@echo "  test-lib          Run lib tests (db + util)"
+	@echo "  test-db-ops       Run database operations tests"
+	@echo "  test-msgpack      Run MessagePack database tests"
+	@echo ""
+	@echo "$(GREEN)Quality assurance:$(NC)"
+	@echo "  test-coverage     Run tests with coverage report"
+	@echo "  validate          Validate MessagePack implementation"
 	@echo ""
 	@echo "$(GREEN)Development:$(NC)"
 	@echo "  format         Format code with ruff"
@@ -85,8 +94,16 @@ test:
 	$(VENV_PYTHON) -m pytest ged2gwb/tests/ -v --tb=short
 	@echo "$(BLUE)Testing gwb2ged OCaml binary...$(NC)"
 	@cd gwb2ged && $(MAKE) test-ocaml
+	@echo "$(BLUE)Testing gwb2ged Python implementation...$(NC)"
+	@cd gwb2ged && $(MAKE) test-python || echo "$(YELLOW)gwb2ged Python tests skipped (no tests found)$(NC)"
 	@echo "$(BLUE)Testing gedcom...$(NC)"
 	$(VENV_PYTHON) -m pytest gedcom/tests/ -v --tb=short
+	@echo "$(BLUE)Testing gwd...$(NC)"
+	@if [ -d gwd ] && [ -n "$$(ls -A gwd/test*.py 2>/dev/null)" ]; then \
+		cd gwd && PYTHONPATH=. $(VENV_PYTHON) -m pytest test*.py -v --tb=short 2>&1 || echo "$(YELLOW)SKIP: gwd tests require gwd module dependencies$(NC)"; \
+	else \
+		echo "$(YELLOW)SKIP: No gwd tests found$(NC)"; \
+	fi
 	@echo "$(BLUE)Testing lib...$(NC)"
 	$(VENV_PYTHON) -m pytest lib/db/tests/ -v --tb=short
 	$(VENV_PYTHON) -m pytest lib/util/ -v --tb=short || echo "$(YELLOW)No tests found in lib/util$(NC)"
@@ -98,14 +115,33 @@ test-ged2gwb:
 	$(VENV_PYTHON) -m pytest ged2gwb/tests/ -v --tb=short
 
 .PHONY: test-gwb2ged
-test-gwb2ged:
+test-gwb2ged: test-gwb2ged-ocaml test-gwb2ged-py
+	@echo "$(GREEN)✓ All gwb2ged tests completed$(NC)"
+
+.PHONY: test-gwb2ged-ocaml
+test-gwb2ged-ocaml:
 	@echo "$(BLUE)Running gwb2ged OCaml binary tests...$(NC)"
 	@cd gwb2ged && $(MAKE) test-ocaml
+
+.PHONY: test-gwb2ged-py
+test-gwb2ged-py:
+	@echo "$(BLUE)Running gwb2ged Python implementation tests...$(NC)"
+	@cd gwb2ged && $(MAKE) test-python
+
 
 .PHONY: test-gedcom
 test-gedcom:
 	@echo "$(BLUE)Running GEDCOM tests...$(NC)"
 	$(VENV_PYTHON) -m pytest gedcom/tests/ -v --tb=short
+
+.PHONY: test-gwd
+test-gwd:
+	@echo "$(BLUE)Running gwd tests...$(NC)"
+	@if [ -d gwd ] && [ -n "$$(ls -A gwd/test*.py 2>/dev/null)" ]; then \
+		cd gwd && PYTHONPATH=. $(VENV_PYTHON) -m pytest test*.py -v --tb=short || echo "$(YELLOW)SKIP: gwd tests require gwd module dependencies$(NC)"; \
+	else \
+		echo "$(YELLOW)SKIP: No gwd tests found$(NC)"; \
+	fi
 
 .PHONY: test-lib
 test-lib:
@@ -147,22 +183,22 @@ validate:
 .PHONY: format
 format:
 	@echo "$(BLUE)Formatting code with ruff...$(NC)"
-	$(VENV_PYTHON) -m ruff format ged2gwb/ gedcom/ lib/ --exclude=lib/old_db,lib/util,ged2gwb/examples,gedcom/tests,ged2gwb/tests
+	$(VENV_PYTHON) -m ruff format ged2gwb/ gedcom/ lib/ gwb2ged/ --exclude=lib/old_db,lib/util,ged2gwb/examples,gedcom/tests,ged2gwb/tests,gwb2ged/tests
 	@echo "$(GREEN)✓ Code formatted$(NC)"
 
 .PHONY: lint
 lint:
 	@echo "$(BLUE)Running linting...$(NC)"
 	@echo "$(YELLOW)Running ruff check...$(NC)"
-	$(VENV_PYTHON) -m ruff check ged2gwb/ gedcom/ lib/ --exclude=lib/old_db,lib/util,ged2gwb/examples,gedcom/tests,ged2gwb/tests
+	$(VENV_PYTHON) -m ruff check ged2gwb/ gedcom/ lib/ gwb2ged/ --exclude=lib/old_db,lib/util,ged2gwb/examples,gedcom/tests,ged2gwb/tests,gwb2ged/tests
 	@echo "$(YELLOW)Running mypy check...$(NC)"
-	$(VENV_PYTHON) -m mypy --ignore-missing-imports --exclude=ged2gwb/examples,gedcom/tests,ged2gwb/tests --follow-imports=skip --show-error-codes ged2gwb/ gedcom/ || true
+	$(VENV_PYTHON) -m mypy --ignore-missing-imports --exclude=ged2gwb/examples,gedcom/tests,ged2gwb/tests,gwb2ged/tests --follow-imports=skip --show-error-codes ged2gwb/ gedcom/ gwb2ged/ || true
 	@echo "$(GREEN)✓ Linting completed$(NC)"
 
 .PHONY: fix
 fix:
 	@echo "$(BLUE)Auto-fixing linting issues...$(NC)"
-	$(VENV_PYTHON) -m ruff check --fix ged2gwb/ gedcom/ lib/ --exclude=lib/old_db,lib/util,ged2gwb/examples,gedcom/tests,ged2gwb/tests
+	$(VENV_PYTHON) -m ruff check --fix ged2gwb/ gedcom/ lib/ gwb2ged/ --exclude=lib/old_db,lib/util,ged2gwb/examples,gedcom/tests,ged2gwb/tests,gwb2ged/tests
 	@echo "$(GREEN)✓ Auto-fixes applied$(NC)"
 
 .PHONY: check

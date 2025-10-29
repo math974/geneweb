@@ -9,6 +9,7 @@ import sys
 
 class Charset(str, Enum):
     """GEDCOM charset options"""
+
     ASCII = "ASCII"
     ANSEL = "ANSEL"
     ANSI = "ANSI"
@@ -17,6 +18,7 @@ class Charset(str, Enum):
 
 class NoNotes(str, Enum):
     """Note exclusion options"""
+
     NONE = "none"  # Include all notes
     NN = "nn"  # Exclude database notes
     NNN = "nnn"  # Exclude all notes
@@ -36,7 +38,9 @@ class ExportOptions:
     ascdesc: Optional[int] = None  # Maximum generation of root's ascendants descendants
     desc: Optional[int] = None  # Maximum generation of root's descendants
     keys: List[str] = field(default_factory=list)  # Key references (can be multiple)
-    surnames: List[str] = field(default_factory=list)  # Filter by surnames (can be multiple)
+    surnames: List[str] = field(
+        default_factory=list
+    )  # Filter by surnames (can be multiple)
     parentship: bool = False  # Select individuals involved in parentship computation
 
     # Content filtering options
@@ -59,4 +63,3 @@ class ExportOptions:
             output_path.parent.mkdir(parents=True, exist_ok=True)
             file_stream = open(output_path, "w", encoding="utf-8")
             return file_stream, file_stream.close
-
