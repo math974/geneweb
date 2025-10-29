@@ -1,41 +1,48 @@
-"""Command Pattern pour les Use Cases - 20 lignes max"""
+"""Command Pattern pour les cas d'utilisation - 20 lignes max par fonction"""
 from abc import ABC, abstractmethod
-from typing import Any, Dict
-from dataclasses import dataclass
+from typing import Optional, List, Dict, Any
+from gwd.domain.entities.person import Person
+from gwd.adapters.database.base_repository import BaseRepository
+
 
 class Command(ABC):
-    """Commande - 20 lignes max"""
+    """Interface pour les commandes - 20 lignes max"""
     
     @abstractmethod
-    def execute(self) -> Any:
+    def execute(self, *args, **kwargs):
+        """Exécuter la commande avec les arguments fournis"""
         pass
 
-@dataclass
+
 class GetPersonCommand(Command):
-    """Commande récupérer personne - 20 lignes max"""
-    base_name: str
-    person_id: int
-    repository: Any
+    """Commande pour obtenir une personne - MAX 20 LIGNES"""
     
-    def execute(self) -> Any:
-        return self.repository.get_person_by_id(self.base_name, self.person_id)
+    def __init__(self, repository: BaseRepository):
+        self.repository = repository
+    
+    def execute(self, base_name: str, person_id: int) -> Optional[Person]:
+        """Obtenir une personne par son ID"""
+        return self.repository.get_person_by_id(base_name, person_id)
 
-@dataclass
+
 class SearchPersonsCommand(Command):
-    """Commande rechercher personnes - 20 lignes max"""
-    base_name: str
-    query: str
-    repository: Any
+    """Commande pour rechercher des personnes - MAX 20 LIGNES"""
     
-    def execute(self) -> Any:
-        return self.repository.search_persons(self.base_name, self.query)
+    def __init__(self, repository: BaseRepository):
+        self.repository = repository
+    
+    def execute(self, base_name: str, query: str) -> List[Person]:
+        """Rechercher des personnes par nom/prénom"""
+        return self.repository.search_persons(base_name, query)
 
-@dataclass
+
 class RenderPageCommand(Command):
-    """Commande rendre page - 20 lignes max"""
-    template_name: str
-    context: Dict[str, Any]
-    template_strategy: Any
+    """Commande pour rendre une page - MAX 20 LIGNES"""
     
-    def execute(self) -> str:
-        return self.template_strategy.render(self.template_name, self.context)
+    def __init__(self, template_strategy):
+        self.template_strategy = template_strategy
+    
+    def execute(self, context: Dict[str, Any]) -> str:
+        """Rendre une page avec un template et un contexte"""
+        template_name = context.get('template', 'base')
+        return self.template_strategy.render(template_name, context)

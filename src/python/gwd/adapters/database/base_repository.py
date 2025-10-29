@@ -1,8 +1,8 @@
 """Repository Pattern pour les Bases - 20 lignes max"""
 from abc import ABC, abstractmethod
 from typing import Optional, List, Dict
-from domain.entities.person import Person
-from domain.entities.base import GenealogyBase
+from gwd.domain.entities.person import Person
+from gwd.domain.entities.base import GenealogyBase
 
 class BaseRepository(ABC):
     """Repository pour les bases - 20 lignes max"""
