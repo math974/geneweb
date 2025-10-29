@@ -501,7 +501,7 @@ def test_verbose_option():
         assert result.returncode == 0, f"Export with verbose failed: {result.stderr}"
 
         # Display GEDCOM content
-        content = _display_gedcom_content(output_file.name, "Test: Export with verbose option (-v)")
+        _display_gedcom_content(output_file.name, "Test: Export with verbose option (-v)")
 
         # With verbose, stderr should have more information
         # (This is implementation-dependent, just check that it runs)
