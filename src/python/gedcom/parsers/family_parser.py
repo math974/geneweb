@@ -85,6 +85,11 @@ class FamilyParser(RecordParser):
             event.date = ParserUtils.parse_date(line.value)
         elif line.tag == TAGS.PLAC:
             event.place = ParserUtils.parse_place(line.value)
+        elif line.tag == TAGS.TYPE:
+            # Preserve TYPE for generic family events (EVEN)
+            if not hasattr(event, "attributes"):
+                event.attributes = {}
+            event.attributes["TYPE"] = line.value
         elif line.tag == TAGS.NOTE:
             event.note = line.value
         elif line.tag == TAGS.SOUR:

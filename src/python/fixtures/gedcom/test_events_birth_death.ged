@@ -1,0 +1,21 @@
+0 HEAD
+1 GEDC
+2 VERS 5.5.1
+1 CHAR UTF-8
+0 @I1@ INDI
+1 NAME John /Doe/
+2 GIVN John
+2 SURN Doe
+1 SEX M
+1 BIRT
+2 DATE 15 MAR 1980
+2 PLAC Hospital, Paris, France
+2 NOTE Birth note
+2 SOUR Source1
+1 DEAT
+2 DATE 20 JAN 2020
+2 PLAC Home, Lyon, France
+2 NOTE Death note
+2 SOUR Source2
+0 TRLR
+
