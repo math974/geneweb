@@ -54,8 +54,8 @@ fi
 echo -e "${BLUE}Creating symlinks in /usr/local/bin...${NC}"
 if command -v sudo >/dev/null 2>&1; then
     sudo ln -sf "$BIN_DIR/ged2gwb" /usr/local/bin/ged2gwb
+    sudo ln -sf "$BIN_DIR/gwb2ged" /usr/local/bin/gwb2ged
     sudo ln -sf "$BIN_DIR/gedcom" /usr/local/bin/gedcom
-    sudo ln -sf "$BIN_DIR/db-pickle" /usr/local/bin/db-pickle
     sudo ln -sf "$BIN_DIR/geneweb-python" /usr/local/bin/geneweb-python
     echo -e "${GREEN}Symlinks created successfully${NC}"
 else
@@ -68,6 +68,12 @@ if "$BIN_DIR/ged2gwb" --help >/dev/null 2>&1; then
     echo -e "${GREEN}✓ ged2gwb is working${NC}"
 else
     echo -e "${RED}✗ ged2gwb test failed${NC}"
+fi
+
+if "$BIN_DIR/gwb2ged" --help >/dev/null 2>&1; then
+    echo -e "${GREEN}✓ gwb2ged is working${NC}"
+else
+    echo -e "${RED}✗ gwb2ged test failed${NC}"
 fi
 
 if "$BIN_DIR/gedcom" --help >/dev/null 2>&1; then

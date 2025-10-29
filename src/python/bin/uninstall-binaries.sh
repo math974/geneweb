@@ -47,8 +47,8 @@ fi
 echo -e "${BLUE}Removing symlinks from /usr/local/bin...${NC}"
 if command -v sudo >/dev/null 2>&1; then
     sudo rm -f /usr/local/bin/ged2gwb
+    sudo rm -f /usr/local/bin/gwb2ged
     sudo rm -f /usr/local/bin/gedcom
-    sudo rm -f /usr/local/bin/db-pickle
     sudo rm -f /usr/local/bin/geneweb-python
     echo -e "${GREEN}Symlinks removed successfully${NC}"
 else

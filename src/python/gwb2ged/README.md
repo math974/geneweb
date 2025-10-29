@@ -4,7 +4,64 @@
 
 `gwb2ged` converts a GeneWeb database (`.gwb` or `.msgpack` format) to a GEDCOM file.
 
-This module is under development for a complete Python implementation.
+This module provides a complete Python implementation with full feature parity with the OCaml version.
+
+## Installation
+
+The module is part of the GeneWeb Python project. Make sure you have the dependencies installed:
+
+```bash
+cd src/python
+pip install -r requirements.txt
+```
+
+## Usage
+
+### Basic Usage
+
+```bash
+# Export database to stdout
+python -m gwb2ged database-name
+
+# Export to file
+python -m gwb2ged database-name -o output.ged
+
+# With options
+python -m gwb2ged database-name -o output.ged -charset UTF-8 -indexes -nn
+```
+
+### Command-Line Options
+
+All options from the OCaml version are supported:
+
+**Output Options:**
+
+- `-o FILE`: Output GEDCOM file (default: stdout)
+- `-charset {ASCII|ANSEL|ANSI|UTF-8}`: Set charset (default: UTF-8)
+- `-v, --verbose`: Verbose output
+
+**Selection Options:**
+
+- `-a N`: Maximum generation of the root's ascendants
+- `-ad N`: Maximum generation of the root's ascendants descendants
+- `-d N`: Maximum generation of the root's descendants
+- `-key KEY`: Key reference of root person (can be used multiple times)
+- `-s SN`: Select this surname (can be used multiple times)
+- `-parentship`: Select individuals involved in parentship computation
+
+**Content Filtering:**
+
+- `-c NUM`: Censor persons born less than NUM years ago
+- `-nn`: No (database) notes
+- `-nnn`: No notes (implies -nn)
+- `-nopicture`: Don't extract individual picture
+- `-picture-path`: Extract pictures path
+- `-source SRC`: Replace individuals and families sources
+
+**Special Options:**
+
+- `-indexes`: Export indexes in GEDCOM
+- `-mem`: Save memory space (slower)
 
 ## Using Tests for Development
 

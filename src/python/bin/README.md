@@ -19,6 +19,24 @@ GEDCOM to GeneWeb converter - the main binary for converting GEDCOM files to Mes
 ./bin/ged2gwb --help
 ```
 
+### `gwb2ged`
+
+GeneWeb Database to GEDCOM converter - converts MessagePack databases to GEDCOM files.
+
+```bash
+# Export database to stdout
+./bin/gwb2ged database-name
+
+# Export to file
+./bin/gwb2ged database-name -o output.ged
+
+# With options
+./bin/gwb2ged database-name -o output.ged -charset UTF-8 -indexes -nn
+
+# Show help
+./bin/gwb2ged --help
+```
+
 ### `gedcom`
 
 GEDCOM parser and utilities - for parsing and validating GEDCOM files.
