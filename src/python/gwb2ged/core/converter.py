@@ -197,7 +197,7 @@ class BaseToGedcomConverter:
         if ascend and ascend.parents:
             # ascend.parents is a list of Iper (the parents)
             # We need to find the family (Ifam) that has this couple
-            if isinstance(ascend.parents, list) and len(ascend.parents) >= 1:
+            if isinstance(ascend.parents, list) and ascend.parents:
                 # Find family where couple matches these parents
                 parent_iper_set = set(ascend.parents)
                 for ifam, family_couple in self.base.data.couples.items():
