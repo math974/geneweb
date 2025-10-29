@@ -1,94 +1,98 @@
-"""Application FastAPI modulaire - 20 lignes max par fonction"""
-from fastapi import FastAPI, Request, HTTPException
+"""Application Web FastAPI pour GeneWeb GWD - 20 lignes max par fonction"""
+import time
+from typing import Optional
+from fastapi import FastAPI, Request, Depends, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
-from geneweb_gwd.adapters.middleware.middleware_chain import MiddlewareHandler, AuthMiddlewareHandler
-from geneweb_gwd.adapters.middleware.robot_observer import RobotDetector, RobotMiddlewareHandler
-from geneweb_gwd.domain.services.auth_factory import AuthStrategyFactory
-from geneweb_gwd.adapters.database.base_repository import MessagePackBaseRepository
-from geneweb_gwd.adapters.web.template_strategies import PersonTemplateStrategy, BaseTemplateStrategy
-from geneweb_gwd.use_cases.commands import GetPersonCommand, SearchPersonsCommand, RenderPageCommand
+from pathlib import Path
 
-class GeneWebFastAPIApp:
-    """Application FastAPI modulaire - 20 lignes max par fonction"""
+from gwd.adapters.database.base_repository import BaseRepository
+from gwd.use_cases.commands import GetPersonCommand, SearchPersonsCommand
+from gwd.adapters.web.template_strategies import TemplateStrategy, Jinja2TemplateStrategy
+
+
+def create_app(config, repository: Optional[BaseRepository] = None):
+    """Créer l'application FastAPI - MAX 20 LIGNES"""
+    app = FastAPI(title="GeneWeb GWD")
     
-    def __init__(self, settings):
-        self.settings = settings
-        self.app = self._create_app()
-        self._setup_components()
-        self._setup_middleware_chain()
-        self._setup_routes()
+    # Configuration
+    templates_dir = Path(config.templates_dir) if config else Path("src/python/gwd/templates")
+    static_dir = Path(config.static_dir) if config else Path("src/python/gwd/static")
     
-    def _create_app(self) -> FastAPI:
-        """Crée l'application - 20 lignes max"""
-        return FastAPI(
-            title="GeneWeb Python GWD",
-            version="1.0.0",
-            description="Serveur GeneWeb modulaire en Python"
-        )
+    # Template strategy
+    template_strategy = Jinja2TemplateStrategy(str(templates_dir))
     
-    def _setup_components(self):
-        """Configure les composants - 20 lignes max"""
-        self.auth_factory = AuthStrategyFactory(
-            self.settings.wizard_password or "",
-            self.settings.friend_password or ""
-        )
-        self.repository = MessagePackBaseRepository(self.settings.bases_dir)
-        self.templates = Jinja2Templates(directory=self.settings.templates_dir)
-        self.person_template_strategy = PersonTemplateStrategy(self.templates)
-        self.base_template_strategy = BaseTemplateStrategy(self.templates)
+    # Servir les fichiers statiques
+    if static_dir.exists():
+        app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
     
-    def _setup_middleware_chain(self):
-        """Configure la chaîne de middleware - 20 lignes max"""
-        auth_handler = AuthMiddlewareHandler(self.auth_factory)
-        robot_detector = RobotDetector(self.settings.max_requests_per_minute)
-        robot_handler = RobotMiddlewareHandler(robot_detector)
+    # Middleware
+    @app.middleware("http")
+    async def add_process_time_header(request: Request, call_next):
+        start_time = time.time()
+        response = await call_next(request)
+        process_time = time.time() - start_time
+        response.headers["X-Process-Time"] = str(process_time)
+        return response
+    
+    # Routes
+    @app.get("/{base_name}", response_class=HTMLResponse)
+    async def home(base_name: str, request: Request):
+        """Page d'accueil - MAX 20 LIGNES"""
+        if not repository:
+            return "Base repository non configuré"
         
-        # Chaîne: Auth -> Robot -> Pass
-        auth_handler.set_next(robot_handler)
-        self.middleware_chain = auth_handler
-    
-    def _setup_routes(self):
-        """Configure les routes - 20 lignes max"""
-        self.app.mount("/static", StaticFiles(directory=self.settings.static_dir), name="static")
-        
-        @self.app.get("/{base_name}", response_class=HTMLResponse)
-        async def get_base_home(base_name: str, request: Request):
-            return await self._handle_base_home(base_name, request)
-        
-        @self.app.get("/{base_name}/person/{person_id}", response_class=HTMLResponse)
-        async def get_person_page(base_name: str, person_id: int, request: Request, m: str = ""):
-            return await self._handle_person_page(base_name, person_id, request, m)
-    
-    async def _handle_base_home(self, base_name: str, request: Request) -> HTMLResponse:
-        """Gère la page d'accueil - 20 lignes max"""
-        base = self.repository.load_base(base_name)
+        base = repository.load_base(base_name)
         if not base:
-            raise HTTPException(status_code=404, detail="Base introuvable")
+            raise HTTPException(status_code=404, detail=f"Base {base_name} non trouvée")
         
-        command = RenderPageCommand(
-            "base_home.html",
-            {
-                'base_name': base_name,
-                'persons_count': len(base.persons),
-                'families_count': len(base.families),
-                'lang': 'fr'
-            },
-            self.base_template_strategy
-        )
+        context = {
+            'base': base,
+            'base_name': base_name,
+            'persons_count': base.persons_count,
+            'families_count': base.families_count,
+            'request': request
+        }
         
-        html = command.execute()
-        return HTMLResponse(content=html)
+        return template_strategy.render('base_home', context)
     
-    async def _handle_person_page(self, base_name: str, person_id: int, 
-                                 request: Request, mode: str) -> HTMLResponse:
-        """Gère la page personne - 20 lignes max"""
-        command = GetPersonCommand(base_name, person_id, self.repository)
-        person = command.execute()
+    @app.get("/{base_name}/person/{person_id}", response_class=HTMLResponse)
+    async def person_page(base_name: str, person_id: int, request: Request):
+        """Page personne - MAX 20 LIGNES"""
+        if not repository:
+            return "Base repository non configuré"
+        
+        cmd = GetPersonCommand(repository)
+        person = cmd.execute(base_name, person_id)
         
         if not person:
-            raise HTTPException(status_code=404, detail="Personne introuvable")
+            raise HTTPException(status_code=404, detail=f"Personne {person_id} non trouvée")
         
-        html = self.person_template_strategy.render_person_page(person, base_name, mode)
-        return HTMLResponse(content=html)
+        context = {
+            'person': person,
+            'base_name': base_name,
+            'request': request
+        }
+        
+        return template_strategy.render('person', context)
+    
+    @app.get("/{base_name}/search", response_class=HTMLResponse)
+    async def search(base_name: str, q: str, request: Request):
+        """Recherche - MAX 20 LIGNES"""
+        if not repository:
+            return "Base repository non configuré"
+        
+        cmd = SearchPersonsCommand(repository)
+        results = cmd.execute(base_name, q)
+        
+        context = {
+            'query': q,
+            'base_name': base_name,
+            'results': results,
+            'count': len(results),
+            'request': request
+        }
+        
+        return template_strategy.render('search_results', context)
+    
+    return app

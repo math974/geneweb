@@ -1,58 +1,53 @@
-"""Template Strategy Pattern - 20 lignes max"""
+"""Template strategies pour le rendu HTML - 20 lignes max par fonction"""
 from abc import ABC, abstractmethod
 from typing import Dict, Any
-from fastapi.templating import Jinja2Templates
+from pathlib import Path
+from jinja2 import Environment, FileSystemLoader
+
 
 class TemplateStrategy(ABC):
-    """Stratégie de template - 20 lignes max"""
+    """Stratégie de template - MAX 20 LIGNES"""
     
     @abstractmethod
     def render(self, template_name: str, context: Dict[str, Any]) -> str:
+        """Rendre un template avec un contexte"""
         pass
 
-class PersonTemplateStrategy(TemplateStrategy):
-    """Stratégie template personne - 20 lignes max"""
-    
-    def __init__(self, templates: Jinja2Templates):
-        self.templates = templates
-    
-    def render(self, template_name: str, context: Dict[str, Any]) -> str:
-        template = self.templates.get_template(template_name)
-        return template.render(context)
-    
-    def render_person_page(self, person, base_name: str, mode: str = "") -> str:
-        context = {
-            'person': person,
-            'base_name': base_name,
-            'mode': mode,
-            'lang': 'fr'
-        }
-        template_name = self._get_template_name(mode)
-        return self.render(template_name, context)
-    
-    def _get_template_name(self, mode: str) -> str:
-        template_map = {
-            "A": "anctree.html",
-            "D": "deslist.html", 
-            "F": "family.html"
-        }
-        return template_map.get(mode, "perso.html")
 
-class BaseTemplateStrategy(TemplateStrategy):
-    """Stratégie template base - 20 lignes max"""
+class Jinja2TemplateStrategy(TemplateStrategy):
+    """Stratégie Jinja2 - MAX 20 LIGNES"""
     
-    def __init__(self, templates: Jinja2Templates):
-        self.templates = templates
+    def __init__(self, template_dir: str):
+        """Initialiser avec le répertoire des templates"""
+        self.env = Environment(
+            loader=FileSystemLoader(template_dir),
+            autoescape=True
+        )
     
     def render(self, template_name: str, context: Dict[str, Any]) -> str:
-        template = self.templates.get_template(template_name)
-        return template.render(context)
+        """Rendre un template avec un contexte - MAX 20 LIGNES"""
+        template = self.env.get_template(f"{template_name}.html")
+        return template.render(**context)
+
+
+class FileTemplateStrategy(TemplateStrategy):
+    """Stratégie de templates simples dans des fichiers - MAX 20 LIGNES"""
     
-    def render_base_home(self, base_name: str, persons_count: int, families_count: int) -> str:
-        context = {
-            'base_name': base_name,
-            'persons_count': persons_count,
-            'families_count': families_count,
-            'lang': 'fr'
-        }
-        return self.render("base_home.html", context)
+    def __init__(self, template_dir: str):
+        """Initialiser avec le répertoire des templates"""
+        self.template_dir = Path(template_dir)
+    
+    def render(self, template_name: str, context: Dict[str, Any]) -> str:
+        """Rendre un template avec un contexte - MAX 20 LIGNES"""
+        template_path = self.template_dir / f"{template_name}.html"
+        if not template_path.exists():
+            return f"Template {template_name}.html not found"
+            
+        with open(template_path, "r", encoding="utf-8") as f:
+            content = f.read()
+            
+        # Remplacement simple des variables {{var}}
+        for key, value in context.items():
+            content = content.replace(f"{{{{{key}}}}}", str(value))
+            
+        return content

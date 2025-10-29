@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Recherche: {{query}}</title>
+</head>
+<body>
+    <h1>Résultats pour "{{query}}"</h1>
+    <p>{{count}} résultat(s) trouvé(s)</p>
+    
+    <ul>
+    {% for person in results %}
+        <li>
+            <a href="/{{base_name}}/person/{{person.id}}">{{person.display_name}}</a>
+        </li>
+    {% endfor %}
+    </ul>
+    
+    <p><a href="/{{base_name}}">Retour à la base</a></p>
+</body>
+</html>
