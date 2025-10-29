@@ -94,7 +94,9 @@ class Gwb2GedExporter:
         charset_encoding_map = {
             "UTF-8": "utf-8",
             "ASCII": "ascii",
-            "ANSI": "latin-1",  # ANSI is typically Windows-1252, use latin-1 as fallback
-            "ANSEL": "latin-1",  # ANSEL encoding
+            "ANSI": "cp1252",  # ANSI is Windows-1252
         }
-        return charset_encoding_map.get(self.options.charset.value, "utf-8")
+        charset = self.options.charset.value
+        if charset == "ANSEL":
+            raise NotImplementedError("ANSEL encoding is not supported. Please use UTF-8, ASCII, or ANSI (Windows-1252).")
+        return charset_encoding_map.get(charset, "utf-8")
