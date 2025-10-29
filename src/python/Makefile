@@ -32,6 +32,7 @@ help:
 	@echo "$(GREEN)Testing:$(NC)"
 	@echo "  test           Run all tests"
 	@echo "  test-ged2gwb   Run ged2gwb tests only"
+	@echo "  test-gwb2ged   Run gwb2ged OCaml binary tests"
 	@echo "  test-gedcom    Run GEDCOM tests only"
 	@echo "  test-lib       Run lib tests (db + util)"
 	@echo "  test-db-ops    Run database operations tests"
@@ -82,6 +83,8 @@ test:
 	@echo "$(BLUE)Running all tests...$(NC)"
 	@echo "$(BLUE)Testing ged2gwb...$(NC)"
 	$(VENV_PYTHON) -m pytest ged2gwb/tests/ -v --tb=short
+	@echo "$(BLUE)Testing gwb2ged OCaml binary...$(NC)"
+	@cd gwb2ged && $(MAKE) test-ocaml
 	@echo "$(BLUE)Testing gedcom...$(NC)"
 	$(VENV_PYTHON) -m pytest gedcom/tests/ -v --tb=short
 	@echo "$(BLUE)Testing lib...$(NC)"
@@ -93,6 +96,11 @@ test:
 test-ged2gwb:
 	@echo "$(BLUE)Running ged2gwb tests...$(NC)"
 	$(VENV_PYTHON) -m pytest ged2gwb/tests/ -v --tb=short
+
+.PHONY: test-gwb2ged
+test-gwb2ged:
+	@echo "$(BLUE)Running gwb2ged OCaml binary tests...$(NC)"
+	@cd gwb2ged && $(MAKE) test-ocaml
 
 .PHONY: test-gedcom
 test-gedcom:
@@ -167,11 +175,12 @@ clean:
 	@echo "$(BLUE)Cleaning temporary files...$(NC)"
 	@find . -type f -name "*.pyc" -delete 2>/dev/null || true
 	@find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
-	@find . -type f -name "*.pkl" -delete 2>/dev/null || true
-	@find . -type f -name "*.pkl.gz" -delete 2>/dev/null || true
 	@find . -type f -name "*.msgpack" -delete 2>/dev/null || true
 	@find . -type d -name "*.msgpack" -exec rm -rf {} + 2>/dev/null || true
+	@find . -type f -name "*.gwb" -delete 2>/dev/null || true
+	@find . -type d -name "*.gwb" -exec rm -rf {} + 2>/dev/null || true
 	@find . -type f -name ".coverage" -delete 2>/dev/null || true
 	@find . -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
 	@find . -type d -name "htmlcov" -exec rm -rf {} + 2>/dev/null || true
+	@cd gwb2ged && $(MAKE) clean
 	@echo "$(GREEN)✓ Cleanup completed$(NC)"
