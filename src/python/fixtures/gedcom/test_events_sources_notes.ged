@@ -1,0 +1,30 @@
+0 HEAD
+1 GEDC
+2 VERS 5.5.1
+1 CHAR UTF-8
+0 @I1@ INDI
+1 NAME John /Doe/
+1 SEX M
+1 BIRT
+2 DATE 1980
+1 BAPM
+2 DATE 15 APR 1980
+2 PLAC Church
+2 NOTE This is a baptism note
+2 SOUR @S1@
+2 SOUR @S2@
+1 EVEN
+2 TYPE Custom Event
+2 DATE 1990
+2 PLAC Place
+2 NOTE Custom event note with multiple
+3 CONT lines
+2 SOUR @S3@
+0 @S1@ SOUR
+1 TITL Source 1
+0 @S2@ SOUR
+1 TITL Source 2
+0 @S3@ SOUR
+1 TITL Source 3
+0 TRLR
+

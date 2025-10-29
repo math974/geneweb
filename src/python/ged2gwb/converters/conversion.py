@@ -114,15 +114,207 @@ class GedcomConverter:
                 sources=sources_text,
             )
 
-            # Add birth event with place if place exists
-            if birth_place:
-                birth_event = Event(name="BIRT", date=birth_date, place=birth_place)
+            if birth_place or individual.birth:
+                birth_note = ""
+                birth_src = ""
+                if individual.birth:
+                    if getattr(individual.birth, "note", None):
+                        birth_note = individual.birth.note or ""
+                    if getattr(individual.birth, "sources", None):
+                        try:
+                            birth_src = ", ".join(individual.birth.sources)
+                        except Exception:
+                            birth_src = ""
+                birth_event = Event(
+                    name="BIRT",
+                    date=birth_date,
+                    place=birth_place or "",
+                    note=birth_note,
+                    src=birth_src,
+                )
                 person.events.append(birth_event)
 
-            # Add death event with place if place exists
-            if death_place:
-                death_event = Event(name="DEAT", date=death_date, place=death_place)
+            if death_place or individual.death:
+                death_note = ""
+                death_src = ""
+                if individual.death:
+                    if getattr(individual.death, "note", None):
+                        death_note = individual.death.note or ""
+                    if getattr(individual.death, "sources", None):
+                        try:
+                            death_src = ", ".join(individual.death.sources)
+                        except Exception:
+                            death_src = ""
+                death_event = Event(
+                    name="DEAT",
+                    date=death_date,
+                    place=death_place or "",
+                    note=death_note,
+                    src=death_src,
+                )
                 person.events.append(death_event)
+
+            # Convert all other events from individual.events
+            if hasattr(individual, "events") and individual.events:
+                for gedcom_event in individual.events:
+                    if not gedcom_event:
+                        continue
+
+                    # Get event name from tag or TYPE attribute
+                    event_name = gedcom_event.tag
+                    if event_name == "EVEN" and gedcom_event.attributes.get("TYPE"):
+                        event_name = gedcom_event.attributes["TYPE"]
+                    # Skip birth and death (already handled above)
+                    if event_name in {"BIRT", "DEAT", "birth", "death"}:
+                        continue
+
+                    # Convert event date
+                    event_date = None
+                    if gedcom_event.date:
+                        event_date = self.convert_date(gedcom_event.date)
+
+                    # Convert event place
+                    event_place = ""
+                    if gedcom_event.place:
+                        event_place = (
+                            gedcom_event.place.name
+                            if hasattr(gedcom_event.place, "name")
+                            else str(gedcom_event.place)
+                        )
+
+                    # Convert event note
+                    event_note = ""
+                    if gedcom_event.note:
+                        event_note = gedcom_event.note
+
+                    # Convert event source
+                    event_src = ""
+                    if gedcom_event.sources:
+                        event_src = ", ".join(gedcom_event.sources)
+
+                    # Create Event object
+                    event = Event(
+                        name=event_name,
+                        date=event_date,
+                        place=event_place,
+                        note=event_note,
+                        src=event_src,
+                    )
+                    person.events.append(event)
+
+            if individual.baptism:
+                baptism_place = ""
+                if individual.baptism.place:
+                    baptism_place = (
+                        individual.baptism.place.name
+                        if hasattr(individual.baptism.place, "name")
+                        else str(individual.baptism.place)
+                    )
+                baptism_event = Event(
+                    name="BAPM",
+                    date=baptism_date,
+                    place=baptism_place,
+                    note=individual.baptism.note if individual.baptism.note else "",
+                    src=", ".join(individual.baptism.sources) if individual.baptism.sources else "",
+                )
+                person.events.append(baptism_event)
+
+            # Burial
+            if individual.burial:
+                burial_place = ""
+                if individual.burial.place:
+                    burial_place = (
+                        individual.burial.place.name
+                        if hasattr(individual.burial.place, "name")
+                        else str(individual.burial.place)
+                    )
+                burial_event = Event(
+                    name="BURI",
+                    date=burial_date,
+                    place=burial_place,
+                    note=individual.burial.note if individual.burial.note else "",
+                    src=", ".join(individual.burial.sources) if individual.burial.sources else "",
+                )
+                person.events.append(burial_event)
+
+            # Other dedicated event fields
+            for event_attr in ["confirmation", "adult_christening", "bar_mitzvah", "bas_mitzvah",
+                               "blessing", "ordination", "adoption", "naturalization",
+                               "probate", "will", "emigration", "immigration", "retirement"]:
+                event_obj = getattr(individual, event_attr, None)
+                if event_obj:
+                    event_name = event_obj.tag
+                    event_date = None
+                    if event_obj.date:
+                        event_date = self.convert_date(event_obj.date)
+                    event_place = ""
+                    if event_obj.place:
+                        event_place = (
+                            event_obj.place.name
+                            if hasattr(event_obj.place, "name")
+                            else str(event_obj.place)
+                        )
+                    event_note = event_obj.note if event_obj.note else ""
+                    event_src = ", ".join(event_obj.sources) if event_obj.sources else ""
+
+                    event = Event(
+                        name=event_name,
+                        date=event_date,
+                        place=event_place,
+                        note=event_note,
+                        src=event_src,
+                    )
+                    person.events.append(event)
+
+            # Census events (can be multiple)
+            if hasattr(individual, "census") and individual.census:
+                for census_event in individual.census:
+                    event_date = None
+                    if census_event.date:
+                        event_date = self.convert_date(census_event.date)
+                    event_place = ""
+                    if census_event.place:
+                        event_place = (
+                            census_event.place.name
+                            if hasattr(census_event.place, "name")
+                            else str(census_event.place)
+                        )
+                    event_note = census_event.note if census_event.note else ""
+                    event_src = ", ".join(census_event.sources) if census_event.sources else ""
+
+                    event = Event(
+                        name="CENS",
+                        date=event_date,
+                        place=event_place,
+                        note=event_note,
+                        src=event_src,
+                    )
+                    person.events.append(event)
+
+            # Residence events (can be multiple)
+            if hasattr(individual, "residence") and individual.residence:
+                for resi_event in individual.residence:
+                    event_date = None
+                    if resi_event.date:
+                        event_date = self.convert_date(resi_event.date)
+                    event_place = ""
+                    if resi_event.place:
+                        event_place = (
+                            resi_event.place.name
+                            if hasattr(resi_event.place, "name")
+                            else str(resi_event.place)
+                        )
+                    event_note = resi_event.note if resi_event.note else ""
+                    event_src = ", ".join(resi_event.sources) if resi_event.sources else ""
+
+                    event = Event(
+                        name="RESI",
+                        date=event_date,
+                        place=event_place,
+                        note=event_note,
+                        src=event_src,
+                    )
+                    person.events.append(event)
 
             # Apply default source if specified and no sources exist
             if self.options and self.options.default_source:
@@ -252,6 +444,108 @@ class GedcomConverter:
                 notes=notes_text,
                 sources=sources_text,
             )
+
+            # Convert all other events from family.events
+            if hasattr(family, "events") and family.events:
+                for gedcom_event in family.events:
+                    if not gedcom_event:
+                        continue
+
+                    # Get event name from tag or TYPE attribute
+                    event_name = gedcom_event.tag
+                    if event_name == "EVEN" and gedcom_event.attributes.get("TYPE"):
+                        event_name = gedcom_event.attributes["TYPE"]
+
+                    # Skip marriage and divorce (already handled above)
+                    if event_name in {"MARR", "DIV", "marriage", "divorce"}:
+                        continue
+
+                    # Convert event date
+                    event_date = None
+                    if gedcom_event.date:
+                        event_date = self.convert_date(gedcom_event.date)
+
+                    # Convert event place
+                    event_place = ""
+                    if gedcom_event.place:
+                        event_place = (
+                            gedcom_event.place.name
+                            if hasattr(gedcom_event.place, "name")
+                            else str(gedcom_event.place)
+                        )
+
+                    # Convert event note
+                    event_note = ""
+                    if gedcom_event.note:
+                        event_note = gedcom_event.note
+
+                    # Convert event source
+                    event_src = ""
+                    if gedcom_event.sources:
+                        event_src = ", ".join(gedcom_event.sources)
+
+                    # Create Event object
+                    event = Event(
+                        name=event_name,
+                        date=event_date,
+                        place=event_place,
+                        note=event_note,
+                        src=event_src,
+                    )
+                    geneweb_family.events.append(event)
+
+            # Convert events from dedicated family event fields
+            for event_attr in ["engagement", "marriage_banns", "marriage_contract",
+                               "marriage_license", "marriage_settlement", "annulment"]:
+                event_obj = getattr(family, event_attr, None)
+                if event_obj:
+                    event_name = event_obj.tag
+                    event_date = None
+                    if event_obj.date:
+                        event_date = self.convert_date(event_obj.date)
+                    event_place = ""
+                    if event_obj.place:
+                        event_place = (
+                            event_obj.place.name
+                            if hasattr(event_obj.place, "name")
+                            else str(event_obj.place)
+                        )
+                    event_note = event_obj.note if event_obj.note else ""
+                    event_src = ", ".join(event_obj.sources) if event_obj.sources else ""
+
+                    event = Event(
+                        name=event_name,
+                        date=event_date,
+                        place=event_place,
+                        note=event_note,
+                        src=event_src,
+                    )
+                    geneweb_family.events.append(event)
+
+            # Census events (can be multiple)
+            if hasattr(family, "census") and family.census:
+                for census_event in family.census:
+                    event_date = None
+                    if census_event.date:
+                        event_date = self.convert_date(census_event.date)
+                    event_place = ""
+                    if census_event.place:
+                        event_place = (
+                            census_event.place.name
+                            if hasattr(census_event.place, "name")
+                            else str(census_event.place)
+                        )
+                    event_note = census_event.note if census_event.note else ""
+                    event_src = ", ".join(census_event.sources) if census_event.sources else ""
+
+                    event = Event(
+                        name="CENS",
+                        date=event_date,
+                        place=event_place,
+                        note=event_note,
+                        src=event_src,
+                    )
+                    geneweb_family.events.append(event)
 
             couple = GenCouple(father=husband_id, mother=wife_id)
 

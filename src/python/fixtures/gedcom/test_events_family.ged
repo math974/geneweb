@@ -1,0 +1,32 @@
+0 HEAD
+1 GEDC
+2 VERS 5.5.1
+1 CHAR UTF-8
+0 @I1@ INDI
+1 NAME Husband /Smith/
+1 SEX M
+0 @I2@ INDI
+1 NAME Wife /Smith/
+1 SEX F
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 ENGA
+2 DATE 2004
+2 PLAC Restaurant
+2 NOTE Engagement party
+1 MARR
+2 DATE 2005
+2 PLAC City Hall
+2 NOTE Wedding ceremony
+1 MARC
+2 DATE 2005
+2 PLAC Lawyer Office
+2 NOTE Marriage contract
+1 EVEN
+2 TYPE Reception
+2 DATE 2005
+2 PLAC Reception Hall
+2 NOTE Wedding reception
+0 TRLR
+

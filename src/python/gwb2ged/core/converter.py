@@ -209,7 +209,8 @@ class BaseToGedcomConverter:
                     place=GedcomPlace(name=death_place) if death_place else None,
                 )
 
-        # Convert notes (database notes only if allowed)
+        self._convert_all_events(individual, person, iper)
+
         if self.options.no_notes == NoNotes.NONE:
             if person.notes:
                 individual.notes.append(person.notes)
@@ -217,14 +218,11 @@ class BaseToGedcomConverter:
         # Convert families relationships (family as child)
         ascend = self.base.ascend(iper)
         if ascend and ascend.parents:
-            # ascend.parents is a list of Iper (the parents)
-            # We need to find the family (Ifam) that has this couple
             if isinstance(ascend.parents, list) and ascend.parents:
                 # Find family where couple matches these parents
                 parent_iper_set = set(ascend.parents)
                 for ifam, family_couple in self.base.data.couples.items():
                     couple = family_couple
-                    # Check if this couple matches the parents (father and/or mother in parent list)
                     if (
                         couple.father in parent_iper_set
                         or couple.mother in parent_iper_set
@@ -302,6 +300,8 @@ class BaseToGedcomConverter:
 
                 gedcom_family.marriage = marriage_event
 
+        self._convert_all_family_events(gedcom_family, family, ifam)
+
         if self.options.no_notes == NoNotes.NONE:
             if family.notes:
                 gedcom_family.notes.append(family.notes)
@@ -366,6 +366,265 @@ class BaseToGedcomConverter:
             gedcom_date.raw = raw_str if raw_str else ""
 
         return gedcom_date
+
+    def _get_gedcom_event_tag(self, event_name: str) -> tuple[str, bool]:
+        """
+        Map event name to GEDCOM tag and determine if it's a primary event.
+
+        Args:
+            event_name: Name of the event (from Event.name)
+
+        Returns:
+            Tuple of (gedcom_tag, is_primary)
+            - gedcom_tag: The GEDCOM tag to use (or None if custom)
+            - is_primary: True if it's a primary event (direct tag), False if EVEN with TYPE
+        """
+        event_name_lower = event_name.lower().strip()
+
+        # Primary events mapping (GEDCOM 5.5.1 standard tags)
+        primary_events = {
+            "birth": "BIRT",
+            "birt": "BIRT",
+            "baptism": "BAPM",
+            "bapm": "BAPM",
+            "death": "DEAT",
+            "deat": "DEAT",
+            "burial": "BURI",
+            "buri": "BURI",
+            "cremation": "CREM",
+            "crem": "CREM",
+            "baptismlds": "BAPL",
+            "bapl": "BAPL",
+            "barmitzvah": "BARM",
+            "barm": "BARM",
+            "batmitzvah": "BASM",
+            "basm": "BASM",
+            "benediction": "BLES",
+            "bles": "BLES",
+            "confirmation": "CONF",
+            "conf": "CONF",
+            "confirmationlds": "CONL",
+            "conl": "CONL",
+            "dotation": "ENDL",
+            "endl": "ENDL",
+            "education": "EDUC",
+            "educ": "EDUC",
+            "emigration": "EMIG",
+            "emig": "EMIG",
+            "firstcommunion": "FCOM",
+            "fcom": "FCOM",
+            "graduate": "GRAD",
+            "grad": "GRAD",
+            "immigration": "IMMI",
+            "immi": "IMMI",
+            "naturalisation": "NATU",
+            "naturalization": "NATU",
+            "natu": "NATU",
+            "occupation": "OCCU",
+            "occu": "OCCU",
+            "ordination": "ORDN",
+            "ordn": "ORDN",
+            "property": "PROP",
+            "prop": "PROP",
+            "recensement": "CENS",
+            "census": "CENS",
+            "cens": "CENS",
+            "residence": "RESI",
+            "resi": "RESI",
+            "retired": "RETI",
+            "reti": "RETI",
+            "scellentchildlds": "SLGC",
+            "slgc": "SLGC",
+            "scellentspouselds": "SLGS",
+            "slgs": "SLGS",
+            "will": "WILL",
+        }
+
+        # Check if it's a primary event
+        if event_name_lower in primary_events:
+            return primary_events[event_name_lower], True
+
+        # For custom events, use EVEN with TYPE
+        # Return the original event name as TYPE value
+        return event_name, False
+
+    def _is_primary_event(self, event_name: str) -> bool:
+        """Check if event is a primary GEDCOM event"""
+        _, is_primary = self._get_gedcom_event_tag(event_name)
+        return is_primary
+
+    def _convert_all_events(self, individual: GedcomIndividual, person, iper: Iper) -> None:
+        """
+        Convert all events from person.events to GEDCOM events.
+
+        Excludes birth and death events which are handled separately.
+
+        Args:
+            individual: GedcomIndividual to add events to
+            person: GenPerson object
+            iper: Person ID (for logging)
+        """
+        if not person.events:
+            return
+
+        # Events already handled separately
+        excluded_event_names = {"birth", "birt", "naissance", "death", "deat", "décès", "deces"}
+
+        for event in person.events:
+            if not event or not hasattr(event, "name"):
+                continue
+
+            event_name = event.name.strip() if event.name else ""
+            if not event_name:
+                continue
+
+            # Skip birth and death (already handled)
+            if event_name.lower() in excluded_event_names:
+                continue
+
+            # Get GEDCOM tag
+            gedcom_tag, is_primary = self._get_gedcom_event_tag(event_name)
+
+            # Convert event
+            gedcom_event = GedcomEvent(tag=gedcom_tag)
+
+            # For non-primary events, use EVEN with TYPE
+            if not is_primary:
+                gedcom_event.tag = "EVEN"
+                # Set TYPE attribute
+                gedcom_event.attributes = {"TYPE": event_name}
+
+            # Convert date
+            if event.date:
+                date_obj = self._convert_date_to_gedcom(event.date)
+                if date_obj:
+                    gedcom_event.date = date_obj
+
+            # Convert place
+            if hasattr(event, "place") and event.place:
+                gedcom_event.place = GedcomPlace(name=event.place)
+
+            # Convert note (if not excluded)
+            if self.options.no_notes != NoNotes.NNN:
+                if hasattr(event, "note") and event.note:
+                    gedcom_event.note = event.note
+
+            # Convert source (unless replaced by -source option)
+            if not self.options.source:
+                if hasattr(event, "src") and event.src:
+                    gedcom_event.sources = [event.src]
+
+            # Only add event if it has meaningful data (date, place, or note)
+            if gedcom_event.date or (gedcom_event.place and gedcom_event.place.name) or gedcom_event.note:
+                individual.events.append(gedcom_event)
+                self.logger.debug(
+                    f"Converted event '{event_name}' -> '{gedcom_event.tag}' for person {iper}"
+                )
+
+    def _get_gedcom_family_event_tag(self, event_name: str) -> tuple[str, bool]:
+        """
+        Map family event name to GEDCOM tag and determine if it's a primary event.
+
+        Args:
+            event_name: Name of the family event
+
+        Returns:
+            Tuple of (gedcom_tag, is_primary)
+        """
+        event_name_lower = event_name.lower().strip()
+
+        # Primary family events mapping (GEDCOM 5.5.1)
+        primary_family_events = {
+            "marriage": "MARR",
+            "marr": "MARR",
+            "engagement": "ENGA",
+            "enga": "ENGA",
+            "divorce": "DIV",
+            "div": "DIV",
+            "separated": "SEP",
+            "sep": "SEP",
+            "annulment": "ANUL",
+            "anul": "ANUL",
+            "marriagebann": "MARB",
+            "marb": "MARB",
+            "marriagecontract": "MARC",
+            "marc": "MARC",
+            "marriagelicense": "MARL",
+            "marl": "MARL",
+        }
+
+        if event_name_lower in primary_family_events:
+            return primary_family_events[event_name_lower], True
+
+        # For custom events, use EVEN with TYPE
+        return event_name, False
+
+    def _convert_all_family_events(self, gedcom_family: GedcomFamily, family, ifam: Ifam) -> None:
+        """
+        Convert all events from family.events to GEDCOM events.
+
+        Excludes marriage and divorce events which are handled separately.
+
+        Args:
+            gedcom_family: GedcomFamily to add events to
+            family: GenFamily object
+            ifam: Family ID (for logging)
+        """
+        if not family.events:
+            return
+
+        # Events already handled separately
+        excluded_event_names = {"marriage", "marr", "divorce", "div"}
+
+        for event in family.events:
+            if not event or not hasattr(event, "name"):
+                continue
+
+            event_name = event.name.strip() if event.name else ""
+            if not event_name:
+                continue
+
+            # Skip marriage and divorce (already handled)
+            if event_name.lower() in excluded_event_names:
+                continue
+
+            # Get GEDCOM tag
+            gedcom_tag, is_primary = self._get_gedcom_family_event_tag(event_name)
+
+            # Convert event
+            gedcom_event = GedcomEvent(tag=gedcom_tag)
+
+            # For non-primary events, use EVEN with TYPE
+            if not is_primary:
+                gedcom_event.tag = "EVEN"
+                gedcom_event.attributes = {"TYPE": event_name}
+
+            # Convert date
+            if event.date:
+                date_obj = self._convert_date_to_gedcom(event.date)
+                if date_obj:
+                    gedcom_event.date = date_obj
+
+            # Convert place
+            if hasattr(event, "place") and event.place:
+                gedcom_event.place = GedcomPlace(name=event.place)
+
+            # Convert note (if not excluded)
+            if self.options.no_notes != NoNotes.NNN:
+                if hasattr(event, "note") and event.note:
+                    gedcom_event.note = event.note
+
+            # Convert source (unless replaced by -source option)
+            if not self.options.source:
+                if hasattr(event, "src") and event.src:
+                    gedcom_event.sources = [event.src]
+
+            # Only add event if it has meaningful data
+            if gedcom_event.date or (gedcom_event.place and gedcom_event.place.name) or gedcom_event.note:
+                gedcom_family.events.append(gedcom_event)
+                self.logger.debug(
+                    f"Converted family event '{event_name}' -> '{gedcom_event.tag}' for family {ifam}"
+                )
 
     def _apply_selection(self) -> tuple[set[Iper], set[Ifam]]:
         """

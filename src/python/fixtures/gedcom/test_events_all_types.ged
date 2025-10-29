@@ -1,0 +1,50 @@
+0 HEAD
+1 GEDC
+2 VERS 5.5.1
+1 CHAR UTF-8
+0 @I1@ INDI
+1 NAME John /Doe/
+1 SEX M
+1 BIRT
+2 DATE 1980
+2 PLAC Paris
+1 BAPM
+2 DATE 15 APR 1980
+2 PLAC Church, Paris
+2 NOTE Baptism note
+2 SOUR Baptism record
+1 CONF
+2 DATE 1990
+2 PLAC Cathedral
+1 GRAD
+2 DATE 1998
+2 PLAC University
+2 NOTE Graduation note
+1 EMIG
+2 DATE 2010
+2 PLAC Port, Marseille
+2 NOTE Emigration
+1 IMMI
+2 DATE 2011
+2 PLAC Port, New York
+2 NOTE Immigration
+1 OCCU
+2 DATE 2012
+2 NOTE Engineer
+1 RETI
+2 DATE 2030
+2 PLAC Home
+1 CENS
+2 DATE 1990
+2 PLAC Address1, City1
+1 RESI
+2 DATE 1995
+2 PLAC Residence1
+2 NOTE First residence
+1 EVEN
+2 TYPE Military Service
+2 DATE 1999
+2 PLAC Base
+2 NOTE Military note
+0 TRLR
+

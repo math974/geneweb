@@ -1,0 +1,25 @@
+0 HEAD
+1 GEDC
+2 VERS 5.5.1
+1 CHAR UTF-8
+0 @I1@ INDI
+1 NAME John /Doe/
+1 SEX M
+1 BIRT
+2 DATE 1980
+1 CENS
+2 DATE 1990
+2 PLAC Address1, City1
+1 CENS
+2 DATE 2000
+2 PLAC Address2, City2
+1 RESI
+2 DATE 1995
+2 PLAC Residence1
+2 NOTE First residence
+1 RESI
+2 DATE 2005
+2 PLAC Residence2
+2 NOTE Second residence
+0 TRLR
+
