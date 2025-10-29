@@ -22,6 +22,11 @@ class AuthResult:
         return self.status == AuthStatus.SUCCESS
     
     @property
+    def success(self) -> bool:
+        """Alias pour compatibilité des tests"""
+        return self.is_authenticated
+    
+    @property
     def has_privileges(self) -> bool:
         return self.is_wizard or self.is_friend
     
@@ -30,7 +35,7 @@ class AuthResult:
         return cls(AuthStatus.SUCCESS, user, is_wizard, is_friend)
     
     @classmethod
-    def failed(cls, user: str = "") -> 'AuthResult':
+    def failed(cls, user: str = "", _error: str = "") -> 'AuthResult':
         return cls(AuthStatus.FAILED, user)
     
     @classmethod
