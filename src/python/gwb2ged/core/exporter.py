@@ -98,5 +98,7 @@ class Gwb2GedExporter:
         }
         charset = self.options.charset.value
         if charset == "ANSEL":
-            raise NotImplementedError("ANSEL encoding is not supported. Please use UTF-8, ASCII, or ANSI (Windows-1252).")
+            raise NotImplementedError(
+                "ANSEL encoding is not supported. Please use UTF-8, ASCII, or ANSI (Windows-1252)."
+            )
         return charset_encoding_map.get(charset, "utf-8")

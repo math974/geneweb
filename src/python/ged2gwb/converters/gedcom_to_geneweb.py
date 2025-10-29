@@ -92,9 +92,15 @@ class GedcomToGenewebConverter:
         family_children: dict[Ifam, list[Iper]] = {}
         for xref, individual in gedcom_database.individuals.items():
             for famc_ref in individual.famc:
-                if famc_ref.startswith("@F") and famc_ref.endswith("@"):
-                    family_id = Ifam(int(famc_ref[2:-1]))
+                famc_normalized = famc_ref.strip("@")
+                if famc_normalized.startswith("F") and famc_normalized[1:].isdigit():
+                    # Format: "F2" or "@F2@" -> extract "2"
+                    family_id = Ifam(int(famc_normalized[1:]))
+                elif famc_normalized.isdigit():
+                    # Format: "2" -> use directly
+                    family_id = Ifam(int(famc_normalized))
                 else:
+                    # Unknown format, use hash
                     family_id = Ifam(hash(famc_ref) % 1000000)
 
                 if individual.xref.startswith("@I") and individual.xref.endswith("@"):
@@ -167,10 +173,19 @@ class GedcomToGenewebConverter:
 
             geneweb_data.ascends[person_id] = GenAscend(parents=parents)
 
-        # Process unions
+        # Create unions (family relationships for each person)
         self.logger.info("*** saving unions array")
-        for family_id in geneweb_data.descends.keys():
-            pass
+        for person_id in geneweb_data.persons.keys():
+            person_families = []
+            # Find families where this person is a spouse
+            for family_id, couple in geneweb_data.couples.items():
+                if couple.father == person_id or couple.mother == person_id:
+                    person_families.append(family_id)
+
+            if person_families:
+                from lib.db.models.relations import GenUnion
+
+                geneweb_data.unions[person_id] = GenUnion(family=person_families)
 
         # Convert families
         self.logger.info("*** saving families array")
@@ -199,7 +214,9 @@ class GedcomToGenewebConverter:
 
                 # Only create couple if it doesn't exist (wasn't created in descends section)
                 if family_id not in geneweb_data.couples:
-                    geneweb_family, couple, children = self.converter.convert_family(family)
+                    geneweb_family, couple, children = self.converter.convert_family(
+                        family
+                    )
                     geneweb_data.couples[family_id] = couple
             except Exception as e:
                 self.logger.error(f"Error processing couple {xref}: {e}")

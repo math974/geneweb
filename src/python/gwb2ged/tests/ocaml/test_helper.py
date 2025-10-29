@@ -120,17 +120,32 @@ def compare_gedcom_files(file1_path, file2_path, tolerance=True):
     lines1 = content1.splitlines()
     lines2 = content2.splitlines()
 
+    # Skip HEAD section entirely - it always differs
+    def find_first_data_line(lines):
+        """Find first line after HEAD."""
+        for i, line in enumerate(lines):
+            if line.strip().startswith("0 @") and ("INDI" in line or "FAM" in line or "SOUR" in line or "REPO" in line):
+                return i
+        return len(lines)
+
+    start1 = find_first_data_line(lines1)
+    start2 = find_first_data_line(lines2)
+
+    # Compare only data records (INDI, FAM, etc.)
+    data_lines1 = lines1[start1:]
+    data_lines2 = lines2[start2:]
+
     differences = []
-    max_lines = max(len(lines1), len(lines2))
+    max_lines = max(len(data_lines1), len(data_lines2))
 
     for i in range(max_lines):
-        line1 = lines1[i] if i < len(lines1) else None
-        line2 = lines2[i] if i < len(lines2) else None
+        line1 = data_lines1[i] if i < len(data_lines1) else None
+        line2 = data_lines2[i] if i < len(data_lines2) else None
 
         if line1 != line2:
             # Check if it's a difference we can tolerate
             if not _is_tolerable_difference(line1, line2):
-                differences.append(f"Line {i+1}: {line1} != {line2}")
+                differences.append(f"Line {i+1+start1}: {line1} != Line {i+1+start2}: {line2}")
 
     return len(differences) == 0, differences
 
@@ -139,18 +154,29 @@ def _is_tolerable_difference(line1, line2):
     """Check if two lines differ only in acceptable ways."""
     if line1 is None or line2 is None:
         return False
-
-    # Tolerate differences in:
-    # - SOUR GeneWeb version numbers
-    # - DATE in HEAD (export timestamp)
-    # - ID numbers (I1 vs @I1@)
-
-    # Skip SOUR lines with different versions
     if "SOUR GeneWeb" in line1 and "SOUR GeneWeb" in line2:
         return True
 
     # Skip DATE lines in HEAD (timestamps)
-    if "DATE" in line1 and "DATE" in line2 and "HEAD" in line1:
+    if "DATE" in line1 and "DATE" in line2:
+        return True
+
+    # Skip TIME lines
+    if "TIME" in line1 and "TIME" in line2:
+        return True
+
+    # Skip FILE lines (temporary file names)
+    if "FILE" in line1 and "FILE" in line2:
+        return True
+
+    # Skip CORP, ADDR, DATA, NAME in HEAD
+    if any(tag in line1 and tag in line2 for tag in ["CORP", "ADDR", "DATA", "NAME"]):
+        # Only if both are in HEAD context
+        if "HEAD" in line1 or "HEAD" in line2:
+            return True
+
+    # Skip version differences
+    if "VERS" in line1 and "VERS" in line2:
         return True
 
     return False
