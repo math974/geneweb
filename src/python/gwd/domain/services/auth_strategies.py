@@ -23,7 +23,10 @@ class BasicAuthStrategy(AuthStrategy):
     
     def _parse_credentials(self, credentials: str) -> tuple[str, str]:
         import base64
-        decoded = base64.b64decode(credentials).decode("utf-8")
+        token = credentials.strip()
+        if token.startswith("Basic "):
+            token = token[len("Basic "):]
+        decoded = base64.b64decode(token).decode("utf-8")
         return decoded.split(":", 1)
     
     def _check_credentials(self, username: str, password: str) -> AuthResult:
@@ -41,5 +44,25 @@ class DigestAuthStrategy(AuthStrategy):
         self.friend_password = friend_password
     
     def authenticate(self, credentials: str) -> AuthResult:
-        # Implémentation simplifiée
-        return AuthResult.failed()
+        parsed = self._parse_digest(credentials)
+        if not parsed:
+            return AuthResult.failed("", "Invalid digest header")
+        username = parsed.get("username", "")
+        response = parsed.get("response", "")
+        if response == self.wizard_password:
+            return AuthResult.success(username, is_wizard=True)
+        if response == self.friend_password:
+            return AuthResult.success(username, is_friend=True)
+        return AuthResult.failed(username)
+    
+    def _parse_digest(self, credentials: str) -> Optional[dict]:
+        header = credentials.strip()
+        if not header.startswith("Digest "):
+            return None
+        parts = header[len("Digest "):].split(",")
+        kv = {}
+        for part in parts:
+            if "=" in part:
+                k, v = part.strip().split("=", 1)
+                kv[k] = v.strip().strip('"')
+        return kv
