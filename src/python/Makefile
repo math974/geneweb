@@ -128,7 +128,7 @@ test-msgpack:
 .PHONY: test-coverage
 test-coverage:
 	@echo "$(BLUE)Running tests with coverage...$(NC)"
-	$(VENV_PYTHON) -m pytest --cov=ged2gwb --cov=gedcom --cov=lib --cov-report=html --cov-report=term
+	$(VENV_PYTHON) -m pytest --cov=gwb2ged --cov=ged2gwb --cov=gedcom --cov=lib --cov-report=html --cov-report=term
 
 .PHONY: validate
 validate:

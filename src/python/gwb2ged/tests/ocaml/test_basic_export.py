@@ -115,7 +115,7 @@ def test_basic_export():
 if __name__ == "__main__":
     result = test_basic_export()
     if not result:
-        print("$(RED)FAIL$(NC)")
+        print("✗ FAIL")
         sys.exit(1)
-    print("$(GREEN)PASS$(NC)")
+    print("✓ PASS")
     sys.exit(0)
