@@ -15,18 +15,6 @@ on:
         required: false
         default: false
         type: boolean
-  # Removed push trigger for master - now only called by build-and-deploy.yml
-  pull_request:
-    paths:
-      - '**/*.ml'
-      - '**/*.mli'
-      - '**/*.py'
-      - '.ocamlformat'
-      - 'dune'
-      - 'dune-project'
-      - '**/*.opam'
-      - 'src/python/**'
-      - 'docker/**'
 
 env:
   IMAGE_NAME: 'geneweb'

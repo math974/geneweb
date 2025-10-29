@@ -9,17 +9,6 @@ on:
       use-python-binaries:
         description: "Whether to use Python binaries"
         value: ${{ jobs.build-results.outputs.use-python-binaries }}
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '**/*.ml'
-      - '**/*.mli'
-      - '.ocamlformat'
-      - 'dune'
-      - 'dune-project'
-      - '**/*.opam'
-  # Removed push trigger for master - now only called by build-and-deploy.yml
 
 env:
   OPAMYES: true
