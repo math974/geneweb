@@ -3,6 +3,7 @@ from typing import TextIO
 from ..models import GedcomHeader
 from .base import RecordExporter
 
+
 class HeaderExporter(RecordExporter):
     """Exporter for GEDCOM header records."""
 
@@ -29,14 +30,14 @@ class HeaderExporter(RecordExporter):
             # 2 VERS [GEDCOM format version]
             # 1 CHAR [charset]
 
+            if header.source:
+                file.write(f"1 SOUR {header.source}\n")
+
             file.write("1 GEDC\n")
             if header.version:
                 file.write(f"2 VERS {header.version}\n")
 
             file.write(f"1 CHAR {header.charset}\n")
-
-            if header.source:
-                file.write(f"1 SOUR {header.source}\n")
             if header.destination:
                 file.write(f"1 DEST {header.destination}\n")
 
