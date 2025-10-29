@@ -74,8 +74,8 @@ class Gwb2GedCLI:
             action="append",
             metavar="KEY",
             default=[],
-            help='Key reference of root person. Can be used multiple times. '
-                 'Format: "First Name.occ SURNAME"',
+            help="Key reference of root person. Can be used multiple times. "
+            'Format: "First Name.occ SURNAME"',
         )
         parser.add_argument(
             "-s",
@@ -89,7 +89,7 @@ class Gwb2GedCLI:
             "-parentship",
             action="store_true",
             help="Select individuals involved in parentship computation between pairs of keys. "
-                 "Pairs must be defined with -key option, descendant first",
+            "Pairs must be defined with -key option, descendant first",
         )
 
         # Content filtering options
@@ -99,7 +99,7 @@ class Gwb2GedCLI:
             metavar="NUM",
             default=0,
             help="When a person is born less than NUM years ago, it is not exported unless "
-                 "it is Public. All the spouses and descendants are also censored",
+            "it is Public. All the spouses and descendants are also censored",
         )
         parser.add_argument(
             "-nn",
@@ -212,6 +212,7 @@ class Gwb2GedCLI:
             self.logger.error(f"Error: {e}")
             if parsed_args.verbose:
                 import traceback
+
                 traceback.print_exc()
             return 1
 
@@ -220,4 +221,3 @@ def main():
     """Main entry point"""
     cli = Gwb2GedCLI()
     sys.exit(cli.run())
-

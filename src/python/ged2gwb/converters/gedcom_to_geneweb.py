@@ -120,17 +120,29 @@ class GedcomToGenewebConverter:
 
                     if gedcom_family_id == family_id:
                         if family.husband:
-                            if family.husband.startswith(
-                                "@I"
-                            ) and family.husband.endswith("@"):
-                                father_id = Iper(int(family.husband[2:-1]))
+                            # Handle both formats: "@I1@" or "I1" (stripped)
+                            husband_str = family.husband.strip("@")
+                            if husband_str.startswith("I") or husband_str.isdigit():
+                                try:
+                                    if husband_str.startswith("I"):
+                                        father_id = Iper(int(husband_str[1:]))
+                                    else:
+                                        father_id = Iper(int(husband_str))
+                                except (ValueError, IndexError):
+                                    father_id = Iper(hash(family.husband) % 1000000)
                             else:
                                 father_id = Iper(hash(family.husband) % 1000000)
                         if family.wife:
-                            if family.wife.startswith("@I") and family.wife.endswith(
-                                "@"
-                            ):
-                                mother_id = Iper(int(family.wife[2:-1]))
+                            # Handle both formats: "@I2@" or "I2" (stripped)
+                            wife_str = family.wife.strip("@")
+                            if wife_str.startswith("I") or wife_str.isdigit():
+                                try:
+                                    if wife_str.startswith("I"):
+                                        mother_id = Iper(int(wife_str[1:]))
+                                    else:
+                                        mother_id = Iper(int(wife_str))
+                                except (ValueError, IndexError):
+                                    mother_id = Iper(hash(family.wife) % 1000000)
                             else:
                                 mother_id = Iper(hash(family.wife) % 1000000)
                         break
@@ -176,16 +188,19 @@ class GedcomToGenewebConverter:
                 self.logger.error(f"Error processing family {xref}: {e}")
                 continue
 
-        # Convert couples
+        # Convert couples (if not already created above)
         self.logger.info("*** saving couples array")
         for xref, family in gedcom_database.families.items():
             try:
-                geneweb_family, couple, children = self.converter.convert_family(family)
                 if xref.startswith("@F") and xref.endswith("@"):
                     family_id = Ifam(int(xref[2:-1]))
                 else:
                     family_id = Ifam(hash(xref) % 1000000)
-                geneweb_data.couples[family_id] = couple
+
+                # Only create couple if it doesn't exist (wasn't created in descends section)
+                if family_id not in geneweb_data.couples:
+                    geneweb_family, couple, children = self.converter.convert_family(family)
+                    geneweb_data.couples[family_id] = couple
             except Exception as e:
                 self.logger.error(f"Error processing couple {xref}: {e}")
                 continue
