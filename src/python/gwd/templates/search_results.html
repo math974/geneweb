@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Recherche: {{ query }} - GeneWeb{% endblock %}
+
+{% block header %}
+<h1>Recherche: {{ query }}</h1>
+<p><a href="/{{ base_name }}">Retour à la base {{ base_name }}</a></p>
+{% endblock %}
+
+{% block content %}
+<div class="search-box">
+    <form action="/{{ base_name }}/search" method="get">
+        <input type="text" name="q" value="{{ query }}" placeholder="Rechercher...">
+        <button type="submit">Rechercher</button>
+    </form>
+</div>
+
+<div class="search-results">
+    <h2>Résultats ({{ count }})</h2>
+    
+    {% if results %}
+    <ul class="results-list">
+        {% for person in results %}
+        <li>
+            <a href="/{{ base_name }}/person/{{ person.id }}">{{ person.display_name }}</a>
+            <div class="person-details">
+                {% if person.birth %}
+                <span>Né(e): {{ person.birth }}</span>
+                {% endif %}
+                {% if person.death %}
+                <span>Décédé(e): {{ person.death }}</span>
+                {% endif %}
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="no-results">Aucun résultat trouvé pour "{{ query }}"</p>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block footer %}
+<p>{{ count }} résultat(s) pour "{{ query }}" dans {{ base_name }}</p>
+{% endblock %}

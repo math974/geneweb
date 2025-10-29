@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="{{ lang|default('fr') }}">
+<head>
+    <title>{% block title %}GeneWeb GWD{% endblock %}</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/static/css/style.css">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <div class="container">
+        <header>
+            {% block header %}
+            <h1>GeneWeb GWD</h1>
+            {% endblock %}
+        </header>
+        
+        <main>
+            {% block content %}
+            <p>Contenu de la page</p>
+            {% endblock %}
+        </main>
+        
+        <footer>
+            {% block footer %}
+            <p>GeneWeb GWD - Python Version</p>
+            {% endblock %}
+        </footer>
+    </div>
+</body>
+</html>

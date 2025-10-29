@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Page non trouvée - GeneWeb{% endblock %}
+
+{% block header %}
+<h1>Page non trouvée</h1>
+{% endblock %}
+
+{% block content %}
+<div class="error-container">
+    <div class="error-code">404</div>
+    <div class="error-message">
+        <h2>Page non trouvée</h2>
+        <p>La page que vous avez demandée n'existe pas.</p>
+        
+        {% if base_name %}
+        <p>Retournez à la <a href="/{{ base_name }}">page d'accueil de {{ base_name }}</a>.</p>
+        {% else %}
+        <p>Retournez à la <a href="/">page d'accueil</a>.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block footer %}
+<p>GeneWeb GWD - Python Version</p>
+{% endblock %}
