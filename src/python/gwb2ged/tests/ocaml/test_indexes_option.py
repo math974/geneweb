@@ -185,14 +185,9 @@ def test_gwb2ged_indexes():
         print("\n✓ Cleanup completed")
 
 if __name__ == "__main__":
-
     if test_gwb2ged_indexes():
-        print("✓ ALL TESTS PASSED!")
-        print("The gwb2ged -indexes option works correctly.")
-        print("It adds _GWID tags to preserve internal GeneWeb IDs.")
+        print("✓ PASS")
         sys.exit(0)
     else:
-        print("\n" + "=" * 50)
-        print("✗ TESTS FAILED!")
-        print("The gwb2ged -indexes option is not working correctly.")
+        print("✗ FAIL")
         sys.exit(1)
