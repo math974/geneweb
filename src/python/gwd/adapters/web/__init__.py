@@ -1,1 +1,1 @@
-"""Web adapters GeneWeb GWD"""
+"""Adapters Web pour GeneWeb GWD - FastAPI et Templates"""
