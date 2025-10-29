@@ -1,0 +1,12 @@
+0 HEAD
+1 GEDC
+2 VERS 5.5.1
+1 CHAR UTF-8
+0 @I1@ INDI
+1 NAME José /García/
+2 GIVN José
+2 SURN García
+1 SEX M
+1 NOTE Test note with UTF-8: café, naïve, résumé
+0 TRLR
+

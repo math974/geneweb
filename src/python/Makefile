@@ -214,7 +214,7 @@ clean:
 	@find . -type f -name "*.msgpack" -delete 2>/dev/null || true
 	@find . -type d -name "*.msgpack" -exec rm -rf {} + 2>/dev/null || true
 	@find . -type f -name "*.gwb" -delete 2>/dev/null || true
-	@find . -type d -name "*.gwb" -exec rm -rf {} + 2>/dev/null || true
+	@find . -type d -name "test_bases" -exec rm -rf {} + 2>/dev/null || true
 	@find . -type f -name ".coverage" -delete 2>/dev/null || true
 	@find . -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
 	@find . -type d -name "htmlcov" -exec rm -rf {} + 2>/dev/null || true

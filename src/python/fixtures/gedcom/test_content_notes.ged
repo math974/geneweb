@@ -1,0 +1,12 @@
+0 HEAD
+1 GEDC
+2 VERS 5.5.1
+1 CHAR UTF-8
+0 @I1@ INDI
+1 NAME John /Doe/
+1 NOTE Person note
+0 @F1@ FAM
+1 HUSB @I1@
+1 NOTE Family note
+0 TRLR
+

@@ -138,7 +138,6 @@ jobs:
           echo "Verifying package installation..."
           python -c "import ged2gwb; print('✓ ged2gwb imported successfully')"
           python -c "import gedcom; print('✓ gedcom imported successfully')"
-          python -c "import lib.db_pickle; print('✓ db_pickle imported successfully')"
 
           # Test CLI functionality
           echo "Testing CLI functionality..."
