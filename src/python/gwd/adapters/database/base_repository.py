@@ -1,8 +1,8 @@
 """Repository Pattern pour les Bases - 20 lignes max"""
 from abc import ABC, abstractmethod
 from typing import Optional, List, Dict
-from domain.entities.person import Person
-from domain.entities.base import GenealogyBase
+from gwd.domain.entities.person import Person
+from gwd.domain.entities.base import GenealogyBase
 
 class BaseRepository(ABC):
     """Repository pour les bases - 20 lignes max"""
@@ -36,8 +36,30 @@ class MessagePackBaseRepository(BaseRepository):
         return base
     
     def _load_from_disk(self, base_name: str) -> Optional[GenealogyBase]:
-        # Implémentation simplifiée
-        return None
+        """Charge une base depuis un fichier .msgpack - MAX 20 LIGNES"""
+        import msgpack
+        from pathlib import Path
+        file_path = Path(self.bases_dir) / f"{base_name}.msgpack"
+        if not file_path.exists():
+            return None
+        try:
+            with open(file_path, "rb") as f:
+                data = msgpack.unpackb(f.read(), raw=False)
+            # Les attributs sont différents entre les branches
+            base = GenealogyBase(
+                name=base_name, 
+                path=self.bases_dir,
+                persons={},
+                families={},
+                last_modified="2023-01-01"
+            )
+            for p in data.get("persons", []):
+                person = Person(**p)
+                base.persons[person.id] = person
+            return base
+        except Exception as e:
+            print(f"Erreur chargement base {base_name}: {e}")
+            return None
     
     def get_person_by_id(self, base_name: str, person_id: int) -> Optional[Person]:
         base = self.load_base(base_name)
