@@ -209,8 +209,8 @@ class BaseToGedcomConverter:
                     place=GedcomPlace(name=death_place) if death_place else None,
                 )
 
-        # Convert notes (if not excluded)
-        if self.options.no_notes != NoNotes.NNN:
+        # Convert notes (database notes only if allowed)
+        if self.options.no_notes == NoNotes.NONE:
             if person.notes:
                 individual.notes.append(person.notes)
 
@@ -245,6 +245,19 @@ class BaseToGedcomConverter:
                 xref = self._get_family_xref(ifam)
                 individual.fams.append(xref.strip("@"))
 
+        # Apply content filtering options to individual record
+        # Pictures: currently no multimedia extraction; honor flags by clearing if requested
+        if self.options.no_picture:
+            try:
+                individual.multimedia = []  # type: ignore[attr-defined]
+                individual.private_photos = []  # type: ignore[attr-defined]
+            except Exception:
+                pass
+
+        # Sources replacement
+        if self.options.source:
+            individual.sources = [self.options.source]
+
         return individual
 
     def _convert_family(self, family, ifam: Ifam, xref: str) -> GedcomFamily:
@@ -276,7 +289,6 @@ class BaseToGedcomConverter:
         ):
             marriage_date = self._convert_date_to_gedcom(family.marriage)
             if marriage_date:
-                # marriage_place is stored as string in the database
                 place_str = family.marriage_place if family.marriage_place else None
                 marriage_event = GedcomEvent(
                     tag="MARR",
@@ -290,10 +302,13 @@ class BaseToGedcomConverter:
 
                 gedcom_family.marriage = marriage_event
 
-        # Convert notes (if not excluded)
-        if self.options.no_notes != NoNotes.NNN:
+        if self.options.no_notes == NoNotes.NONE:
             if family.notes:
                 gedcom_family.notes.append(family.notes)
+
+        # Sources replacement
+        if self.options.source:
+            gedcom_family.sources = [self.options.source]
 
         return gedcom_family
 
@@ -432,6 +447,9 @@ class BaseToGedcomConverter:
             selected_persons, selected_families
         )
 
+        selected_persons = self._apply_content_filters(selected_persons)
+
+        # Re-collect families after filter
         selected_families = self._collect_families(selected_persons)
 
         return selected_persons, selected_families
@@ -763,6 +781,82 @@ class BaseToGedcomConverter:
                         expanded.add(couple.mother)
 
         return expanded
+
+    def _apply_content_filters(self, selected_persons: set[Iper]) -> set[Iper]:
+        """
+        Apply content filtering options to selected persons.
+
+        - Censor by age (-c): remove persons born less than N years ago.
+          Propagate censorship to spouses and descendants (basic propagation).
+
+        Args:
+            selected_persons: Set of selected person IDs
+
+        Returns:
+            Filtered set of selected person IDs
+        """
+        if not selected_persons:
+            return selected_persons
+
+        censored: set[Iper] = set()
+
+        # 1) Censor by age
+        if self.options.censor and self.options.censor > 0:
+            from datetime import datetime
+
+            current_year = datetime.utcnow().year
+            threshold_year = current_year - int(self.options.censor)
+
+            # Identify directly censored persons
+            for iper in selected_persons:
+                person = self.base.person(iper)
+                if not person:
+                    continue
+                birth_year = person.birth.year if person.birth else None
+                if birth_year and birth_year > threshold_year:
+                    censored.add(iper)
+
+            # Propagate to spouses and descendants
+            # Note: This is a simplified propagation matching documentation intent
+            queue = list(censored)
+            visited: set[Iper] = set()
+            while queue:
+                cur = queue.pop(0)
+                if cur in visited:
+                    continue
+                visited.add(cur)
+
+                # Spouses via unions
+                union = self.base.union(cur)
+                if union and union.family:
+                    for ifam in union.family:
+                        couple = self.base.couple(ifam)
+                        if couple:
+                            for spouse in [couple.father, couple.mother]:
+                                if (
+                                    spouse
+                                    and spouse in selected_persons
+                                    and spouse not in censored
+                                ):
+                                    censored.add(spouse)
+                                    queue.append(spouse)
+                        # Descendants via family children
+                        descend = self.base.descend(ifam)
+                        if descend and descend.children:
+                            for child in descend.children:
+                                if (
+                                    child
+                                    and child in selected_persons
+                                    and child not in censored
+                                ):
+                                    censored.add(child)
+                                    queue.append(child)
+
+        if not censored:
+            return selected_persons
+
+        # Filter out censored persons
+        return {iper for iper in selected_persons if iper not in censored}
 
     def _collect_families(self, selected_persons: set[Iper]) -> set[Ifam]:
         """

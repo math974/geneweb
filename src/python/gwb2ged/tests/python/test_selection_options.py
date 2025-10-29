@@ -17,6 +17,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from tools.test_utils import get_project_root, get_absolute_path
+from .test_helper import get_fixture_path
 
 # Import test helper for binary detection
 try:
@@ -61,95 +62,55 @@ def _setup_test_environment():
     return gwb2ged_cmd, ged2gwb_cmd, project_root
 
 
-def _create_test_database(ged2gwb_cmd, project_root, bases_dir, test_gedcom_content, db_name):
-    """Create a test database from GEDCOM content"""
-    test_gedcom = None
+def _create_test_database_from_fixture(ged2gwb_cmd, project_root, bases_dir, fixture_filename, db_name):
+    """Create a test database from a fixture GEDCOM file"""
     test_db_path = os.path.join(bases_dir, f"{db_name}.msgpack")
     test_db_path_gwb = os.path.join(bases_dir, db_name)
 
-    try:
-        # Clean up existing databases
-        if os.path.exists(test_db_path):
-            shutil.rmtree(test_db_path)
-        if os.path.exists(test_db_path_gwb):
-            shutil.rmtree(test_db_path_gwb)
+    # Clean up existing databases
+    if os.path.exists(test_db_path):
+        shutil.rmtree(test_db_path)
+    if os.path.exists(test_db_path_gwb):
+        shutil.rmtree(test_db_path_gwb)
 
-        # Create test GEDCOM file
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.ged', delete=False, encoding='utf-8') as f:
-            f.write(test_gedcom_content)
-            test_gedcom = f.name
+    # Get fixture file path
+    test_gedcom = get_fixture_path(fixture_filename)
 
-        # Create MessagePack database
-        cmd = ged2gwb_cmd + [
-            str(test_gedcom),
-            "-bd", str(bases_dir),
-            "-o", db_name,
-            "-f"
-        ]
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            cwd=str(project_root),
-            env={**os.environ, "PYTHONPATH": str(project_root)}
-        )
-        assert result.returncode == 0, f"Failed to create database: {result.stderr}"
+    # Create MessagePack database
+    cmd = ged2gwb_cmd + [
+        str(test_gedcom),
+        "-bd", str(bases_dir),
+        "-o", db_name,
+        "-f"
+    ]
+    result = subprocess.run(
+        cmd,
+        capture_output=True,
+        text=True,
+        cwd=str(project_root),
+        env={**os.environ, "PYTHONPATH": str(project_root)}
+    )
+    assert result.returncode == 0, f"Failed to create database: {result.stderr}"
 
-        msgpack_db_path = os.path.join(bases_dir, f"{db_name}.msgpack")
-        assert os.path.exists(msgpack_db_path), f"MessagePack database not created at {msgpack_db_path}"
+    msgpack_db_path = os.path.join(bases_dir, f"{db_name}.msgpack")
+    assert os.path.exists(msgpack_db_path), f"MessagePack database not created at {msgpack_db_path}"
 
-        return test_gedcom, test_db_path, test_db_path_gwb
-
-    except Exception as e:
-        if test_gedcom and os.path.exists(test_gedcom):
-            os.unlink(test_gedcom)
-        raise e
+    # Return None for test_gedcom since it's a fixture (not a temp file to delete)
+    return None, test_db_path, test_db_path_gwb
 
 
 def test_key_option():
     """Test -key option: select person by key - verify exact selection"""
     gwb2ged_cmd, ged2gwb_cmd, project_root = _setup_test_environment()
 
-    # Create a GEDCOM with multiple persons (some with same name but different occ)
-    test_gedcom_content = """0 HEAD
-1 GEDC
-2 VERS 5.5.1
-1 CHAR UTF-8
-0 @I1@ INDI
-1 NAME John /Doe/
-2 GIVN John
-2 SURN Doe
-1 SEX M
-0 @I2@ INDI
-1 NAME Jane /Smith/
-2 GIVN Jane
-2 SURN Smith
-1 SEX F
-0 @I3@ INDI
-1 NAME John /Doe/
-2 GIVN John
-2 SURN Doe
-1 SEX M
-0 @I4@ INDI
-1 NAME John /Doe/
-2 GIVN John
-2 SURN Doe
-1 SEX M
-0 @F1@ FAM
-1 HUSB @I1@
-1 WIFE @I2@
-0 TRLR
-"""
-
     test_db_name = "test-key-selection"
     bases_dir = get_absolute_path("distribution/bases")
 
-    test_gedcom = None
     output_file = None
 
     try:
-        test_gedcom, test_db_path, test_db_path_gwb = _create_test_database(
-            ged2gwb_cmd, project_root, bases_dir, test_gedcom_content, test_db_name
+        test_gedcom, test_db_path, test_db_path_gwb = _create_test_database_from_fixture(
+            ged2gwb_cmd, project_root, bases_dir, "test_selection_key.ged", test_db_name
         )
 
         # Export with -key option (select John Doe occ 0 = I1)
@@ -218,42 +179,14 @@ def test_surnames_option():
     """Test -surnames option: select persons by surnames - verify all matching surnames are selected"""
     gwb2ged_cmd, ged2gwb_cmd, project_root = _setup_test_environment()
 
-    test_gedcom_content = """0 HEAD
-1 GEDC
-2 VERS 5.5.1
-1 CHAR UTF-8
-0 @I1@ INDI
-1 NAME John /Doe/
-2 GIVN John
-2 SURN Doe
-1 SEX M
-0 @I2@ INDI
-1 NAME Jane /Smith/
-2 GIVN Jane
-2 SURN Smith
-1 SEX F
-0 @I3@ INDI
-1 NAME Bob /Doe/
-2 GIVN Bob
-2 SURN Doe
-1 SEX M
-0 @I4@ INDI
-1 NAME Alice /Brown/
-2 GIVN Alice
-2 SURN Brown
-1 SEX F
-0 TRLR
-"""
-
     test_db_name = "test-surnames-selection"
     bases_dir = get_absolute_path("distribution/bases")
 
-    test_gedcom = None
     output_file = None
 
     try:
-        test_gedcom, test_db_path, test_db_path_gwb = _create_test_database(
-            ged2gwb_cmd, project_root, bases_dir, test_gedcom_content, test_db_name
+        test_gedcom, test_db_path, test_db_path_gwb = _create_test_database_from_fixture(
+            ged2gwb_cmd, project_root, bases_dir, "test_selection_surnames.ged", test_db_name
         )
 
         # Export with -surnames option (select Doe surname)
@@ -312,52 +245,17 @@ def test_surnames_option():
 
 
 def test_asc_desc_options():
-    """Test -asc and -desc options: select ascendants and descendants"""
+    """Test -a and -d options: select ascendants and descendants"""
     gwb2ged_cmd, ged2gwb_cmd, project_root = _setup_test_environment()
-
-    # Create a 3-generation family tree
-    # Note: Both CHIL in FAM and FAMC in INDI are needed for relations to work
-    test_gedcom_content = """0 HEAD
-1 GEDC
-2 VERS 5.5.1
-1 CHAR UTF-8
-0 @I1@ INDI
-1 NAME Grandfather /Smith/
-1 SEX M
-0 @I2@ INDI
-1 NAME Grandmother /Smith/
-1 SEX F
-0 @I3@ INDI
-1 NAME Father /Smith/
-1 SEX M
-1 FAMC @F1@
-0 @I4@ INDI
-1 NAME Mother /Jones/
-1 SEX F
-0 @I5@ INDI
-1 NAME Child /Smith/
-1 SEX M
-1 FAMC @F2@
-0 @F1@ FAM
-1 HUSB @I1@
-1 WIFE @I2@
-1 CHIL @I3@
-0 @F2@ FAM
-1 HUSB @I3@
-1 WIFE @I4@
-1 CHIL @I5@
-0 TRLR
-"""
 
     test_db_name = "test-asc-desc"
     bases_dir = get_absolute_path("distribution/bases")
 
-    test_gedcom = None
     output_file = None
 
     try:
-        test_gedcom, test_db_path, test_db_path_gwb = _create_test_database(
-            ged2gwb_cmd, project_root, bases_dir, test_gedcom_content, test_db_name
+        test_gedcom, test_db_path, test_db_path_gwb = _create_test_database_from_fixture(
+            ged2gwb_cmd, project_root, bases_dir, "test_selection_asc_desc.ged", test_db_name
         )
 
         # Export with -key Child and -a 2 (should include Child, Father, Grandfather, Grandmother)
@@ -437,10 +335,6 @@ def test_asc_desc_options():
         # Verify: Grandfather must be present (root)
         assert has_grandfather2, "Grandfather (root person) must be in export"
 
-        # With -d 2, we expect at least 2 generations of descendants:
-        # Generation 0: Grandfather (selected)
-        # Generation 1: Father (descendant 1 level)
-        # Generation 2: Child (descendant 2 levels)
 
         assert len(indi_records2) >= 2, f"Should have at least Grandfather + 1 descendant, found {len(indi_records2)}"
 
@@ -451,8 +345,6 @@ def test_asc_desc_options():
             os.unlink(output_file2.name)
 
     finally:
-        if test_gedcom and os.path.exists(test_gedcom):
-            os.unlink(test_gedcom)
         if output_file and os.path.exists(output_file.name):
             os.unlink(output_file.name)
         if os.path.exists(test_db_path):
@@ -465,49 +357,14 @@ def test_ascdesc_option():
     """Test -ad option: select ascendants and their descendants"""
     gwb2ged_cmd, ged2gwb_cmd, project_root = _setup_test_environment()
 
-    # Create a 3-generation family tree
-    # Note: Both CHIL in FAM and FAMC in INDI are needed for relations to work
-    test_gedcom_content = """0 HEAD
-1 GEDC
-2 VERS 5.5.1
-1 CHAR UTF-8
-0 @I1@ INDI
-1 NAME Grandfather /Smith/
-1 SEX M
-0 @I2@ INDI
-1 NAME Grandmother /Smith/
-1 SEX F
-0 @I3@ INDI
-1 NAME Father /Smith/
-1 SEX M
-1 FAMC @F1@
-0 @I4@ INDI
-1 NAME Mother /Jones/
-1 SEX F
-0 @I5@ INDI
-1 NAME Child /Smith/
-1 SEX M
-1 FAMC @F2@
-0 @F1@ FAM
-1 HUSB @I1@
-1 WIFE @I2@
-1 CHIL @I3@
-0 @F2@ FAM
-1 HUSB @I3@
-1 WIFE @I4@
-1 CHIL @I5@
-0 TRLR
-"""
-
     test_db_name = "test-ascdesc"
     bases_dir = get_absolute_path("distribution/bases")
 
-    test_gedcom = None
     output_file = None
 
     try:
-        test_gedcom, test_db_path, test_db_path_gwb = _create_test_database(
-            ged2gwb_cmd, project_root, bases_dir, test_gedcom_content, test_db_name
+        test_gedcom, test_db_path, test_db_path_gwb = _create_test_database_from_fixture(
+            ged2gwb_cmd, project_root, bases_dir, "test_selection_ascdesc.ged", test_db_name
         )
 
         # Export with -key Child and -ad 2 (should include ascendants and their descendants)
@@ -555,10 +412,7 @@ def test_ascdesc_option():
 
         print(f"✓ -ad (ascdesc) option works: found {len(indi_records)} individuals")
 
-
     finally:
-        if test_gedcom and os.path.exists(test_gedcom):
-            os.unlink(test_gedcom)
         if output_file and os.path.exists(output_file.name):
             os.unlink(output_file.name)
         if os.path.exists(test_db_path):
@@ -571,49 +425,14 @@ def test_parentship_option():
     """Test -parentship option: select individuals in path between key pairs"""
     gwb2ged_cmd, ged2gwb_cmd, project_root = _setup_test_environment()
 
-    # Create a 3-generation family tree for parentship test
-    # Note: Both CHIL in FAM and FAMC in INDI are needed for relations to work
-    test_gedcom_content = """0 HEAD
-1 GEDC
-2 VERS 5.5.1
-1 CHAR UTF-8
-0 @I1@ INDI
-1 NAME Grandfather /Smith/
-1 SEX M
-0 @I2@ INDI
-1 NAME Grandmother /Smith/
-1 SEX F
-0 @I3@ INDI
-1 NAME Father /Smith/
-1 SEX M
-1 FAMC @F1@
-0 @I4@ INDI
-1 NAME Mother /Jones/
-1 SEX F
-0 @I5@ INDI
-1 NAME Child /Smith/
-1 SEX M
-1 FAMC @F2@
-0 @F1@ FAM
-1 HUSB @I1@
-1 WIFE @I2@
-1 CHIL @I3@
-0 @F2@ FAM
-1 HUSB @I3@
-1 WIFE @I4@
-1 CHIL @I5@
-0 TRLR
-"""
-
     test_db_name = "test-parentship"
     bases_dir = get_absolute_path("distribution/bases")
 
-    test_gedcom = None
     output_file = None
 
     try:
-        test_gedcom, test_db_path, test_db_path_gwb = _create_test_database(
-            ged2gwb_cmd, project_root, bases_dir, test_gedcom_content, test_db_name
+        test_gedcom, test_db_path, test_db_path_gwb = _create_test_database_from_fixture(
+            ged2gwb_cmd, project_root, bases_dir, "test_selection_parentship.ged", test_db_name
         )
 
         # Export with -key pairs (descendant first, then ancestor) and -parentship
@@ -670,8 +489,6 @@ def test_parentship_option():
         print(f"✓ -parentship option works: found path with {len(indi_records)} individuals")
 
     finally:
-        if test_gedcom and os.path.exists(test_gedcom):
-            os.unlink(test_gedcom)
         if output_file and os.path.exists(output_file.name):
             os.unlink(output_file.name)
         if os.path.exists(test_db_path):

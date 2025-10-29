@@ -1,0 +1,41 @@
+0 HEAD
+1 GEDC
+2 VERS 5.5.1
+1 CHAR UTF-8
+0 @I1@ INDI
+1 NAME Grandfather /Smith/
+2 GIVN Grandfather
+2 SURN Smith
+1 SEX M
+0 @I2@ INDI
+1 NAME Grandmother /Smith/
+2 GIVN Grandmother
+2 SURN Smith
+1 SEX F
+0 @I3@ INDI
+1 NAME Father /Smith/
+2 GIVN Father
+2 SURN Smith
+1 SEX M
+1 FAMC @F1@
+0 @I4@ INDI
+1 NAME Mother /Jones/
+2 GIVN Mother
+2 SURN Jones
+1 SEX F
+0 @I5@ INDI
+1 NAME Child /Smith/
+2 GIVN Child
+2 SURN Smith
+1 SEX M
+1 FAMC @F2@
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 CHIL @I3@
+0 @F2@ FAM
+1 HUSB @I3@
+1 WIFE @I4@
+1 CHIL @I5@
+0 TRLR
+

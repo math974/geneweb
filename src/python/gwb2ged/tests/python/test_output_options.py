@@ -17,6 +17,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from tools.test_utils import get_project_root, get_absolute_path
+from .test_helper import get_fixture_path
 
 # Import test helper for binary detection
 try:
@@ -62,6 +63,43 @@ def _setup_test_environment():
     return gwb2ged_cmd, ged2gwb_cmd, project_root
 
 
+def _create_test_database_from_fixture(ged2gwb_cmd, project_root, bases_dir, fixture_filename, db_name):
+    """Create a test database from a fixture GEDCOM file"""
+    test_db_path = os.path.join(bases_dir, f"{db_name}.msgpack")
+    test_db_path_gwb = os.path.join(bases_dir, db_name)
+
+    # Clean up existing databases
+    if os.path.exists(test_db_path):
+        shutil.rmtree(test_db_path)
+    if os.path.exists(test_db_path_gwb):
+        shutil.rmtree(test_db_path_gwb)
+
+    # Get fixture file path
+    test_gedcom = get_fixture_path(fixture_filename)
+
+    # Create MessagePack database
+    cmd = ged2gwb_cmd + [
+        str(test_gedcom),
+        "-bd", str(bases_dir),
+        "-o", db_name,
+        "-f"
+    ]
+    result = subprocess.run(
+        cmd,
+        capture_output=True,
+        text=True,
+        cwd=str(project_root),
+        env={**os.environ, "PYTHONPATH": str(project_root)}
+    )
+    assert result.returncode == 0, f"Failed to create database: {result.stderr}"
+
+    msgpack_db_path = os.path.join(bases_dir, f"{db_name}.msgpack")
+    assert os.path.exists(msgpack_db_path), f"MessagePack database not created at {msgpack_db_path}"
+
+    # Return None for test_gedcom since it's a fixture (not a temp file to delete)
+    return None, test_db_path, test_db_path_gwb
+
+
 def _display_gedcom_content(file_path, description=""):
     """Display GEDCOM file content for inspection"""
     with open(file_path, 'r', encoding='utf-8', errors='replace') as f:
@@ -81,72 +119,15 @@ def test_output_to_file():
     """Test -o option: export to file"""
     gwb2ged_cmd, ged2gwb_cmd, project_root = _setup_test_environment()
 
-    # Create a test GEDCOM file
-    test_gedcom_content = """0 HEAD
-1 GEDC
-2 VERS 5.5.1
-1 CHAR UTF-8
-0 @I1@ INDI
-1 NAME John /Doe/
-2 GIVN John
-2 SURN Doe
-1 SEX M
-1 BIRT
-2 DATE 1980
-0 @I2@ INDI
-1 NAME Jane /Smith/
-2 GIVN Jane
-2 SURN Smith
-1 SEX F
-1 BIRT
-2 DATE 1985
-0 @F1@ FAM
-1 HUSB @I1@
-1 WIFE @I2@
-1 MARR
-2 DATE 2010
-0 TRLR
-"""
-
     test_db_name = "test-output-file"
     bases_dir = get_absolute_path("distribution/bases")
-    test_db_path = os.path.join(bases_dir, f"{test_db_name}.msgpack")
-    test_db_path_gwb = os.path.join(bases_dir, test_db_name)
 
-    test_gedcom = None
     output_file = None
 
     try:
-        # Clean up existing databases
-        if os.path.exists(test_db_path):
-            shutil.rmtree(test_db_path)
-        if os.path.exists(test_db_path_gwb):
-            shutil.rmtree(test_db_path_gwb)
-
-        # Create test GEDCOM file
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.ged', delete=False, encoding='utf-8') as f:
-            f.write(test_gedcom_content)
-            test_gedcom = f.name
-
-        # Create MessagePack database from GEDCOM using Python ged2gwb
-        cmd = ged2gwb_cmd + [
-            str(test_gedcom),
-            "-bd", str(bases_dir),
-            "-o", test_db_name,
-            "-f"
-        ]
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            cwd=str(project_root),
-            env={**os.environ, "PYTHONPATH": str(project_root)}
+        test_gedcom, test_db_path, test_db_path_gwb = _create_test_database_from_fixture(
+            ged2gwb_cmd, project_root, bases_dir, "test_output_basic.ged", test_db_name
         )
-        assert result.returncode == 0, f"Failed to create database: {result.stderr}"
-
-        # Verify .msgpack database was created
-        msgpack_db_path = os.path.join(bases_dir, f"{test_db_name}.msgpack")
-        assert os.path.exists(msgpack_db_path), f"MessagePack database not created at {msgpack_db_path}"
 
         # Test export to file using Python binary
         output_file = tempfile.NamedTemporaryFile(mode='w', suffix='.ged', delete=False)
@@ -171,8 +152,6 @@ def test_output_to_file():
 
     finally:
         # Cleanup
-        if test_gedcom and os.path.exists(test_gedcom):
-            os.unlink(test_gedcom)
         if output_file and os.path.exists(output_file.name):
             os.unlink(output_file.name)
         if os.path.exists(test_db_path):
@@ -185,55 +164,13 @@ def test_output_to_stdout():
     """Test default output: stdout"""
     gwb2ged_cmd, ged2gwb_cmd, project_root = _setup_test_environment()
 
-    # Create a test GEDCOM file
-    test_gedcom_content = """0 HEAD
-1 GEDC
-2 VERS 5.5.1
-1 CHAR UTF-8
-0 @I1@ INDI
-1 NAME John /Doe/
-1 SEX M
-0 TRLR
-"""
-
     test_db_name = "test-output-stdout"
     bases_dir = get_absolute_path("distribution/bases")
-    test_db_path = os.path.join(bases_dir, f"{test_db_name}.msgpack")
-    test_db_path_gwb = os.path.join(bases_dir, test_db_name)
-
-    test_gedcom = None
 
     try:
-        # Clean up existing databases
-        if os.path.exists(test_db_path):
-            shutil.rmtree(test_db_path)
-        if os.path.exists(test_db_path_gwb):
-            shutil.rmtree(test_db_path_gwb)
-
-        # Create test GEDCOM file
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.ged', delete=False, encoding='utf-8') as f:
-            f.write(test_gedcom_content)
-            test_gedcom = f.name
-
-        # Create MessagePack database from GEDCOM using Python ged2gwb
-        cmd = ged2gwb_cmd + [
-            str(test_gedcom),
-            "-bd", str(bases_dir),
-            "-o", test_db_name,
-            "-f"
-        ]
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            cwd=str(project_root),
-            env={**os.environ, "PYTHONPATH": str(project_root)}
+        test_gedcom, test_db_path, test_db_path_gwb = _create_test_database_from_fixture(
+            ged2gwb_cmd, project_root, bases_dir, "test_output_basic.ged", test_db_name
         )
-        assert result.returncode == 0, f"Failed to create database: {result.stderr}"
-
-        # Verify .msgpack database was created
-        msgpack_db_path = os.path.join(bases_dir, f"{test_db_name}.msgpack")
-        assert os.path.exists(msgpack_db_path), f"MessagePack database not created at {msgpack_db_path}"
 
         # Test export to stdout (no -o option) using Python binary
         cmd = gwb2ged_cmd + [test_db_name]
@@ -257,8 +194,6 @@ def test_output_to_stdout():
 
     finally:
         # Cleanup
-        if test_gedcom and os.path.exists(test_gedcom):
-            os.unlink(test_gedcom)
         if os.path.exists(test_db_path):
             shutil.rmtree(test_db_path)
         if os.path.exists(test_db_path_gwb):
@@ -269,56 +204,15 @@ def test_charset_utf8():
     """Test -charset UTF-8 option"""
     gwb2ged_cmd, ged2gwb_cmd, project_root = _setup_test_environment()
 
-    # Create a test GEDCOM file with UTF-8 characters
-    test_gedcom_content = """0 HEAD
-1 GEDC
-2 VERS 5.5.1
-1 CHAR UTF-8
-0 @I1@ INDI
-1 NAME José /García/
-1 SEX M
-0 TRLR
-"""
-
     test_db_name = "test-charset-utf8"
     bases_dir = get_absolute_path("distribution/bases")
-    test_db_path = os.path.join(bases_dir, f"{test_db_name}.msgpack")
-    test_db_path_gwb = os.path.join(bases_dir, test_db_name)
 
-    test_gedcom = None
     output_file = None
 
     try:
-        # Clean up existing databases
-        if os.path.exists(test_db_path):
-            shutil.rmtree(test_db_path)
-        if os.path.exists(test_db_path_gwb):
-            shutil.rmtree(test_db_path_gwb)
-
-        # Create test GEDCOM file
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.ged', delete=False, encoding='utf-8') as f:
-            f.write(test_gedcom_content)
-            test_gedcom = f.name
-
-        # Create MessagePack database from GEDCOM using Python ged2gwb
-        cmd = ged2gwb_cmd + [
-            str(test_gedcom),
-            "-bd", str(bases_dir),
-            "-o", test_db_name,
-            "-f"
-        ]
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            cwd=str(project_root),
-            env={**os.environ, "PYTHONPATH": str(project_root)}
+        test_gedcom, test_db_path, test_db_path_gwb = _create_test_database_from_fixture(
+            ged2gwb_cmd, project_root, bases_dir, "test_output_utf8.ged", test_db_name
         )
-        assert result.returncode == 0, f"Failed to create database: {result.stderr}"
-
-        # Verify .msgpack database was created
-        msgpack_db_path = os.path.join(bases_dir, f"{test_db_name}.msgpack")
-        assert os.path.exists(msgpack_db_path), f"MessagePack database not created at {msgpack_db_path}"
 
         # Test export with UTF-8 charset using Python binary
         output_file = tempfile.NamedTemporaryFile(mode='w', suffix='.ged', delete=False)
@@ -343,8 +237,6 @@ def test_charset_utf8():
 
     finally:
         # Cleanup
-        if test_gedcom and os.path.exists(test_gedcom):
-            os.unlink(test_gedcom)
         if output_file and os.path.exists(output_file.name):
             os.unlink(output_file.name)
         if os.path.exists(test_db_path):
@@ -357,56 +249,15 @@ def test_charset_ascii():
     """Test -charset ASCII option"""
     gwb2ged_cmd, ged2gwb_cmd, project_root = _setup_test_environment()
 
-    # Create a simple test database
-    test_gedcom_content = """0 HEAD
-1 GEDC
-2 VERS 5.5.1
-1 CHAR UTF-8
-0 @I1@ INDI
-1 NAME John /Doe/
-1 SEX M
-0 TRLR
-"""
-
     test_db_name = "test-charset-ascii"
     bases_dir = get_absolute_path("distribution/bases")
-    test_db_path = os.path.join(bases_dir, f"{test_db_name}.msgpack")
-    test_db_path_gwb = os.path.join(bases_dir, test_db_name)
 
-    test_gedcom = None
     output_file = None
 
     try:
-        # Clean up existing databases
-        if os.path.exists(test_db_path):
-            shutil.rmtree(test_db_path)
-        if os.path.exists(test_db_path_gwb):
-            shutil.rmtree(test_db_path_gwb)
-
-        # Create test GEDCOM file
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.ged', delete=False, encoding='utf-8') as f:
-            f.write(test_gedcom_content)
-            test_gedcom = f.name
-
-        # Create MessagePack database from GEDCOM using Python ged2gwb
-        cmd = ged2gwb_cmd + [
-            str(test_gedcom),
-            "-bd", str(bases_dir),
-            "-o", test_db_name,
-            "-f"
-        ]
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            cwd=str(project_root),
-            env={**os.environ, "PYTHONPATH": str(project_root)}
+        test_gedcom, test_db_path, test_db_path_gwb = _create_test_database_from_fixture(
+            ged2gwb_cmd, project_root, bases_dir, "test_output_ascii.ged", test_db_name
         )
-        assert result.returncode == 0, f"Failed to create database: {result.stderr}"
-
-        # Verify .msgpack database was created
-        msgpack_db_path = os.path.join(bases_dir, f"{test_db_name}.msgpack")
-        assert os.path.exists(msgpack_db_path), f"MessagePack database not created at {msgpack_db_path}"
 
         # Test export with ASCII charset using Python binary
         output_file = tempfile.NamedTemporaryFile(mode='w', suffix='.ged', delete=False)
@@ -426,8 +277,6 @@ def test_charset_ascii():
 
     finally:
         # Cleanup
-        if test_gedcom and os.path.exists(test_gedcom):
-            os.unlink(test_gedcom)
         if output_file and os.path.exists(output_file.name):
             os.unlink(output_file.name)
         if os.path.exists(test_db_path):
@@ -440,56 +289,15 @@ def test_verbose_option():
     """Test -v (verbose) option"""
     gwb2ged_cmd, ged2gwb_cmd, project_root = _setup_test_environment()
 
-    # Create a simple test database
-    test_gedcom_content = """0 HEAD
-1 GEDC
-2 VERS 5.5.1
-1 CHAR UTF-8
-0 @I1@ INDI
-1 NAME John /Doe/
-1 SEX M
-0 TRLR
-"""
-
     test_db_name = "test-verbose"
     bases_dir = get_absolute_path("distribution/bases")
-    test_db_path = os.path.join(bases_dir, f"{test_db_name}.msgpack")
-    test_db_path_gwb = os.path.join(bases_dir, test_db_name)
 
-    test_gedcom = None
     output_file = None
 
     try:
-        # Clean up existing databases
-        if os.path.exists(test_db_path):
-            shutil.rmtree(test_db_path)
-        if os.path.exists(test_db_path_gwb):
-            shutil.rmtree(test_db_path_gwb)
-
-        # Create test GEDCOM file
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.ged', delete=False, encoding='utf-8') as f:
-            f.write(test_gedcom_content)
-            test_gedcom = f.name
-
-        # Create MessagePack database from GEDCOM using Python ged2gwb
-        cmd = ged2gwb_cmd + [
-            str(test_gedcom),
-            "-bd", str(bases_dir),
-            "-o", test_db_name,
-            "-f"
-        ]
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            cwd=str(project_root),
-            env={**os.environ, "PYTHONPATH": str(project_root)}
+        test_gedcom, test_db_path, test_db_path_gwb = _create_test_database_from_fixture(
+            ged2gwb_cmd, project_root, bases_dir, "test_output_basic.ged", test_db_name
         )
-        assert result.returncode == 0, f"Failed to create database: {result.stderr}"
-
-        # Verify .msgpack database was created
-        msgpack_db_path = os.path.join(bases_dir, f"{test_db_name}.msgpack")
-        assert os.path.exists(msgpack_db_path), f"MessagePack database not created at {msgpack_db_path}"
 
         # Test export with verbose option using Python binary
         output_file = tempfile.NamedTemporaryFile(mode='w', suffix='.ged', delete=False)
@@ -514,8 +322,6 @@ def test_verbose_option():
 
     finally:
         # Cleanup
-        if test_gedcom and os.path.exists(test_gedcom):
-            os.unlink(test_gedcom)
         if output_file and os.path.exists(output_file.name):
             os.unlink(output_file.name)
         if os.path.exists(test_db_path):
