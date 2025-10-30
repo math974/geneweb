@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ lang }}">
+<html lang="en">
 <head>
     <title>{{ base_name }} - GeneWeb</title>
     <meta charset="UTF-8">
@@ -8,29 +8,77 @@
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>{{ base_name }}</h1>
-            <p>Base généalogique GeneWeb</p>
-        </header>
-        
-        <main>
-            <div class="stats">
-                <div class="stat">
-                    <h3>{{ persons_count }}</h3>
-                    <p>Personnes</p>
-                </div>
-                <div class="stat">
-                    <h3>{{ families_count }}</h3>
-                    <p>Familles</p>
-                </div>
+        <header class="page-header">
+            <div class="header-content">
+                <h1 class="main-title">{{ base_name }}</h1>
+                <p class="subtitle">Genealogy Database</p>
             </div>
-            
-            <nav class="main-menu">
-                <a href="/{{ base_name }}/search">Rechercher</a>
-                <a href="/{{ base_name }}/stats">Statistiques</a>
-                <a href="/{{ base_name }}/help">Aide</a>
-            </nav>
+        </header>
+
+        <main class="main-content">
+            <div class="two-column-layout">
+                <section class="left-column">
+                    <section class="stats-section">
+                        <div class="stat-card stat-primary">
+                            <div class="stat-icon">👥</div>
+                            <div class="stat-value">{{ "{:,}".format(persons_count|default(0)) }}</div>
+                            <div class="stat-label">Individuals</div>
+                        </div>
+                        <div class="stat-card stat-secondary">
+                            <div class="stat-icon">👨‍👩‍👧‍👦</div>
+                            <div class="stat-value">{{ "{:,}".format(families_count|default(0)) }}</div>
+                            <div class="stat-label">Families</div>
+                        </div>
+                    </section>
+
+                    <section class="actions-section">
+                        <nav class="action-menu">
+                            <a href="/{{ base_name }}/search" class="action-btn action-btn-primary">
+                                <span class="btn-icon">🔍</span>
+                                <span class="btn-text">Search</span>
+                            </a>
+                            <a href="/{{ base_name }}/stats" class="action-btn action-btn-secondary">
+                                <span class="btn-icon">📊</span>
+                                <span class="btn-text">Statistics</span>
+                            </a>
+                        </nav>
+                    </section>
+                </section>
+
+                <section class="upload-section upload-column-right">
+                    <div class="upload-card">
+                        <h2 class="upload-title">📤 Upload GEDCOM File</h2>
+                        <p class="upload-description">Upload a .ged file to create or recreate a database</p>
+                        <form action="/{{ base_name }}/upload" method="post" enctype="multipart/form-data" class="upload-form">
+                            <div class="form-group">
+                                <label for="new_base_name" class="form-label">Database Name (optional):</label>
+                                <input type="text" id="new_base_name" name="new_base_name"
+                                       value="{{ base_name }}" class="form-input"
+                                       placeholder="Enter base name (default: {{ base_name }})">
+                            </div>
+                            <div class="form-group">
+                                <label for="ged_file" class="form-label">GEDCOM File (.ged):</label>
+                                <input type="file" id="ged_file" name="file"
+                                       accept=".ged,.GED" required class="form-input-file">
+                            </div>
+                            <button type="submit" class="upload-button">
+                                <span class="btn-icon">⬆️</span>
+                                <span class="btn-text">Upload and Convert</span>
+                            </button>
+                        </form>
+                        {% if request.query_params.get('success') == 'upload' %}
+                        <div class="upload-success">
+                            ✅ Database created successfully!
+                        </div>
+                        {% endif %}
+                    </div>
+                </section>
+            </div>
         </main>
+
+        <footer class="page-footer">
+            <p>Powered by GeneWeb Python</p>
+        </footer>
     </div>
 </body>
 </html>

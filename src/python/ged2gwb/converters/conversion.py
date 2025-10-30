@@ -45,7 +45,7 @@ class GedcomConverter:
             birth_place = None
             if individual.birth:
                 if individual.birth.date:
-                    birth_date = self.convert_date(individual.birth.date)
+                birth_date = self.convert_date(individual.birth.date)
                 if individual.birth.place:
                     # Extract place name from GedcomPlace
                     birth_place = (
@@ -62,7 +62,7 @@ class GedcomConverter:
             death_place = None
             if individual.death:
                 if individual.death.date:
-                    death_date = self.convert_date(individual.death.date)
+                death_date = self.convert_date(individual.death.date)
                 if individual.death.place:
                     # Extract place name from GedcomPlace
                     death_place = (
@@ -352,7 +352,7 @@ class GedcomConverter:
             marriage_place = None
             if family.marriage:
                 if family.marriage.date:
-                    marriage_date = self.convert_date(family.marriage.date)
+                marriage_date = self.convert_date(family.marriage.date)
                 if family.marriage.place:
                     # Extract place name from GedcomPlace
                     marriage_place = (
