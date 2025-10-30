@@ -1,47 +1,235 @@
 <!DOCTYPE html>
-<html lang="{{ lang }}">
+<html lang="en">
 <head>
-    <title>{{ person.display_name }}</title>
+    <title>{{ person.display_name }} - {{ base_name }} - GeneWeb</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>{{ person.display_name }}</h1>
-            {% if person.occ > 0 %}<span class="occ">({{ person.occ }})</span>{% endif %}
-        </header>
-        
-        <main>
-            <div class="person-info">
-                <h2>Informations personnelles</h2>
-                
-                {% if person.birth %}
-                <p><strong>Né(e) :</strong> {{ person.birth }}</p>
-                {% endif %}
-                
-                {% if person.birth_place %}
-                <p><strong>Lieu de naissance :</strong> {{ person.birth_place }}</p>
-                {% endif %}
-                
-                {% if person.death %}
-                <p><strong>Décédé(e) :</strong> {{ person.death }}</p>
-                {% endif %}
-                
-                {% if person.death_place %}
-                <p><strong>Lieu de décès :</strong> {{ person.death_place }}</p>
-                {% endif %}
-            </div>
-            
-            <!-- Menu de navigation -->
-            <nav class="person-menu">
-                <a href="/{{ base_name }}/person/{{ person.id }}?m=A">Ascendance</a>
-                <a href="/{{ base_name }}/person/{{ person.id }}?m=D">Descendance</a>
-                <a href="/{{ base_name }}/person/{{ person.id }}?m=F">Famille</a>
-                <a href="/{{ base_name }}/search">Rechercher</a>
+        <header class="page-header">
+            <nav class="breadcrumb">
+                <a href="/{{ base_name }}">Home</a>
+                <span class="separator">›</span>
+                <a href="/{{ base_name }}/search">Search</a>
+                <span class="separator">›</span>
+                <span>Person</span>
             </nav>
+            <div class="header-content">
+                <h1 class="person-name">
+                    {{ person.display_name }}
+                    {% if person.occ > 0 %}<span class="occ-badge">({{ person.occ }})</span>{% endif %}
+                </h1>
+                <div class="person-header-meta">
+                    {% if person.birth or person.death %}
+                    <span class="person-lifespan">
+                        {% if person.birth %}{{ person.birth.year }}{% endif %}
+                        {% if person.birth and person.death %} - {% endif %}
+                        {% if person.death %}{{ person.death.year }}{% endif %}
+                    </span>
+                    {% endif %}
+                    {% if person.age_at_death %}
+                    <span class="person-age">(Age: {{ person.age_at_death }} years)</span>
+                    {% endif %}
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="person-layout">
+                <!-- Left Column - Main Info -->
+                <div class="person-main-column">
+                    <!-- Personal Information -->
+                    <section class="person-details">
+                        <div class="detail-card">
+                            <h2 class="section-title">
+                                <span class="title-icon">ℹ️</span>
+                                Personal Information
+                            </h2>
+                            <div class="detail-grid">
+                                <div class="detail-item">
+                                    <span class="detail-label">👤 First Name</span>
+                                    <span class="detail-value">{{ person.first_name or 'N/A' }}</span>
+                                </div>
+
+                                <div class="detail-item">
+                                    <span class="detail-label">📛 Surname</span>
+                                    <span class="detail-value">{{ person.surname or 'N/A' }}</span>
+                                </div>
+
+                                {% if person.public_name %}
+                                <div class="detail-item">
+                                    <span class="detail-label">🏷️ Public Name</span>
+                                    <span class="detail-value">{{ person.public_name }}</span>
+                                </div>
+                                {% endif %}
+
+                                {% if person.occ > 0 %}
+                                <div class="detail-item">
+                                    <span class="detail-label">🔢 Occurrence</span>
+                                    <span class="detail-value">{{ person.occ }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Birth Information -->
+                    {% if person.birth or person.birth_place %}
+                    <section class="person-details">
+                        <div class="detail-card detail-card-birth">
+                            <h2 class="section-title">
+                                <span class="title-icon">👶</span>
+                                Birth Information
+                            </h2>
+                            <div class="detail-grid">
+                                {% if person.birth %}
+                                <div class="detail-item">
+                                    <span class="detail-label">📅 Birth Date</span>
+                                    <span class="detail-value">{{ person.birth.strftime('%B %d, %Y') }}</span>
+                                </div>
+                                {% endif %}
+
+                                {% if person.birth_place %}
+                                <div class="detail-item">
+                                    <span class="detail-label">📍 Birth Place</span>
+                                    <span class="detail-value">{{ person.birth_place }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </section>
+                    {% endif %}
+
+                    <!-- Death Information -->
+                    {% if person.death or person.death_place %}
+                    <section class="person-details">
+                        <div class="detail-card detail-card-death">
+                            <h2 class="section-title">
+                                <span class="title-icon">💀</span>
+                                Death Information
+                            </h2>
+                            <div class="detail-grid">
+                                {% if person.death %}
+                                <div class="detail-item">
+                                    <span class="detail-label">📅 Death Date</span>
+                                    <span class="detail-value">{{ person.death.strftime('%B %d, %Y') }}</span>
+                                </div>
+                                {% endif %}
+
+                                {% if person.death_place %}
+                                <div class="detail-item">
+                                    <span class="detail-label">📍 Death Place</span>
+                                    <span class="detail-value">{{ person.death_place }}</span>
+                                </div>
+                                {% endif %}
+
+                                {% if person.age_at_death %}
+                                <div class="detail-item">
+                                    <span class="detail-label">⏳ Age at Death</span>
+                                    <span class="detail-value">{{ person.age_at_death }} years</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </section>
+                    {% endif %}
+
+                    <!-- Notes -->
+                    {% if person.notes %}
+                    <section class="person-details">
+                        <div class="detail-card detail-card-notes">
+                            <h2 class="section-title">
+                                <span class="title-icon">📝</span>
+                                Notes
+                            </h2>
+                            <div class="notes-content">
+                                <p>{{ person.notes|replace('\n', '<br>')|safe }}</p>
+                            </div>
+                        </div>
+                    </section>
+                    {% endif %}
+
+                    <!-- Sources -->
+                    {% if person.sources and person.sources|length > 0 %}
+                    <section class="person-details">
+                        <div class="detail-card detail-card-sources">
+                            <h2 class="section-title">
+                                <span class="title-icon">📚</span>
+                                Sources
+                            </h2>
+                            <div class="sources-list">
+                                {% for source in person.sources %}
+                                <div class="source-item">
+                                    <span class="source-icon">📄</span>
+                                    <span class="source-text">{{ source }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </section>
+                    {% endif %}
+                </div>
+
+                <!-- Right Column - Quick Info & Navigation -->
+                <div class="person-sidebar">
+                    <div class="info-box">
+                        <h3 class="info-box-title">Quick Info</h3>
+                        <div class="info-box-content">
+                            {% if person.birth %}
+                            <div class="info-item">
+                                <span class="info-label">Birth Year</span>
+                                <span class="info-value">{{ person.birth.year }}</span>
+                            </div>
+                            {% endif %}
+                            {% if person.death %}
+                            <div class="info-item">
+                                <span class="info-label">Death Year</span>
+                                <span class="info-value">{{ person.death.year }}</span>
+                            </div>
+                            {% endif %}
+                            {% if person.age_at_death %}
+                            <div class="info-item">
+                                <span class="info-label">Lifespan</span>
+                                <span class="info-value">{{ person.age_at_death }} years</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="navigation-box">
+                        <h3 class="nav-box-title">Navigation</h3>
+                        <nav class="person-nav-vertical">
+                            <a href="/{{ base_name }}/person/{{ person.id }}?m=A" class="nav-btn-vertical nav-btn-ancestry">
+                                <span class="nav-icon">🌳</span>
+                                <span class="nav-text">Ancestry Tree</span>
+                            </a>
+                            <a href="/{{ base_name }}/person/{{ person.id }}?m=D" class="nav-btn-vertical nav-btn-descendants">
+                                <span class="nav-icon">🌲</span>
+                                <span class="nav-text">Descendants</span>
+                            </a>
+                            <a href="/{{ base_name }}/person/{{ person.id }}?m=F" class="nav-btn-vertical nav-btn-family">
+                                <span class="nav-icon">👨‍👩‍👧‍👦</span>
+                                <span class="nav-text">Family</span>
+                            </a>
+                            <a href="/{{ base_name }}/search" class="nav-btn-vertical nav-btn-search">
+                                <span class="nav-icon">🔍</span>
+                                <span class="nav-text">New Search</span>
+                            </a>
+                            <a href="/{{ base_name }}" class="nav-btn-vertical nav-btn-home">
+                                <span class="nav-icon">🏠</span>
+                                <span class="nav-text">Home</span>
+                            </a>
+                        </nav>
+                    </div>
+                </div>
+            </div>
         </main>
+
+        <footer class="page-footer">
+            <a href="/{{ base_name }}" class="footer-link">← Back to Database</a>
+        </footer>
     </div>
 </body>
 </html>

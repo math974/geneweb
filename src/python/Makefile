@@ -99,8 +99,10 @@ test:
 	@echo "$(BLUE)Testing gedcom...$(NC)"
 	$(VENV_PYTHON) -m pytest gedcom/tests/ -v --tb=short
 	@echo "$(BLUE)Testing gwd...$(NC)"
-	@if [ -d gwd ] && [ -n "$$(ls -A gwd/test*.py 2>/dev/null)" ]; then \
-		cd gwd && PYTHONPATH=. $(VENV_PYTHON) -m pytest test*.py -v --tb=short 2>&1 || echo "$(YELLOW)SKIP: gwd tests require gwd module dependencies$(NC)"; \
+	@if [ -d gwd/tests ] && [ -n "$$(ls -A gwd/tests/*.py 2>/dev/null | grep -v __init__)" ]; then \
+		cd gwd && PYTHONPATH=. $(VENV_PYTHON) -m pytest tests/ -v --tb=short 2>&1 || echo "$(YELLOW)SKIP: gwd tests require gwd module dependencies$(NC)"; \
+	elif [ -d gwd ] && [ -n "$$(ls -A gwd/test*.py 2>/dev/null)" ]; then \
+		cd gwd && PYTHONPATH=. $(VENV_PYTHON) -m pytest test*.py tests.py tests_simple.py -v --tb=short 2>&1 || echo "$(YELLOW)SKIP: gwd tests require gwd module dependencies$(NC)"; \
 	else \
 		echo "$(YELLOW)SKIP: No gwd tests found$(NC)"; \
 	fi
@@ -137,8 +139,10 @@ test-gedcom:
 .PHONY: test-gwd
 test-gwd:
 	@echo "$(BLUE)Running gwd tests...$(NC)"
-	@if [ -d gwd ] && [ -n "$$(ls -A gwd/test*.py 2>/dev/null)" ]; then \
-		cd gwd && PYTHONPATH=. $(VENV_PYTHON) -m pytest test*.py -v --tb=short || echo "$(YELLOW)SKIP: gwd tests require gwd module dependencies$(NC)"; \
+	@if [ -d gwd/tests ] && [ -n "$$(ls -A gwd/tests/*.py 2>/dev/null | grep -v __init__)" ]; then \
+		cd gwd && PYTHONPATH=. $(VENV_PYTHON) -m pytest tests/ -v --tb=short || echo "$(YELLOW)SKIP: gwd tests require gwd module dependencies$(NC)"; \
+	elif [ -d gwd ] && [ -n "$$(ls -A gwd/test*.py 2>/dev/null)" ]; then \
+		cd gwd && PYTHONPATH=. $(VENV_PYTHON) -m pytest test*.py tests.py tests_simple.py -v --tb=short 2>&1 || echo "$(YELLOW)SKIP: gwd tests require gwd module dependencies$(NC)"; \
 	else \
 		echo "$(YELLOW)SKIP: No gwd tests found$(NC)"; \
 	fi

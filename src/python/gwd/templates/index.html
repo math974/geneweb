@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>GeneWeb - Databases</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="page-header">
+            <div class="header-content">
+                <h1 class="main-title">GeneWeb</h1>
+                <p class="subtitle">Genealogy Databases</p>
+            </div>
+        </header>
+
+        <main class="main-content">
+            {% if bases and bases|length > 0 %}
+            <div class="two-column-layout">
+                <section class="bases-section bases-column">
+                    <h2 class="section-title">Available Databases</h2>
+                    <div class="bases-grid">
+                        {% for base in bases %}
+                        <div class="base-card">
+                            <div class="base-card-header">
+                                <h3 class="base-name">{{ base }}</h3>
+                            </div>
+                            <div class="base-card-actions">
+                                <a href="/{{ base }}" class="base-link">
+                                    <span class="btn-icon">👁️</span>
+                                    <span class="btn-text">View Database</span>
+                                </a>
+                                <a href="/{{ base }}/stats" class="base-link-secondary">
+                                    <span class="btn-icon">📊</span>
+                                    <span class="btn-text">Statistics</span>
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </section>
+
+                <section class="upload-section-new upload-column">
+                    <div class="upload-card">
+                        <h2 class="upload-title">📤 Upload New Database</h2>
+                        <p class="upload-description">Upload a .ged file to create a new database</p>
+                        <form action="/upload" method="post" enctype="multipart/form-data" class="upload-form">
+                            <div class="form-group">
+                                <label for="new_base_name" class="form-label">Database Name:</label>
+                                <input type="text" id="new_base_name" name="new_base_name"
+                                       required class="form-input"
+                                       placeholder="Enter base name">
+                            </div>
+                            <div class="form-group">
+                                <label for="ged_file" class="form-label">GEDCOM File (.ged):</label>
+                                <input type="file" id="ged_file" name="file"
+                                       accept=".ged,.GED" required class="form-input-file">
+                            </div>
+                            <button type="submit" class="upload-button">
+                                <span class="btn-icon">⬆️</span>
+                                <span class="btn-text">Upload and Create</span>
+                            </button>
+                        </form>
+                        {% if request.query_params.get('success') == 'upload' %}
+                        <div class="upload-success">
+                            ✅ Database created successfully!
+                        </div>
+                        {% endif %}
+                    </div>
+                </section>
+            </div>
+            {% else %}
+            <section class="empty-state">
+                <div class="empty-state-icon">📁</div>
+                <h2 class="empty-state-title">No Databases Found</h2>
+                <p class="empty-state-description">Upload a GEDCOM file to create your first database</p>
+
+                <section class="upload-section-new">
+                    <div class="upload-card">
+                        <h2 class="upload-title">📤 Upload Your First Database</h2>
+                        <p class="upload-description">Upload a .ged file to create a new database</p>
+                        <form action="/upload" method="post" enctype="multipart/form-data" class="upload-form">
+                            <div class="form-group">
+                                <label for="new_base_name" class="form-label">Database Name:</label>
+                                <input type="text" id="new_base_name" name="new_base_name"
+                                       required class="form-input"
+                                       placeholder="Enter base name">
+                            </div>
+                            <div class="form-group">
+                                <label for="ged_file" class="form-label">GEDCOM File (.ged):</label>
+                                <input type="file" id="ged_file" name="file"
+                                       accept=".ged,.GED" required class="form-input-file">
+                            </div>
+                            <button type="submit" class="upload-button">
+                                <span class="btn-icon">⬆️</span>
+                                <span class="btn-text">Upload and Create</span>
+                            </button>
+                        </form>
+                    </div>
+                </section>
+            </section>
+            {% endif %}
+        </main>
+
+        <footer class="page-footer">
+            <p>Powered by GeneWeb Python</p>
+        </footer>
+    </div>
+</body>
+</html>
+

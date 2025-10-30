@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Search - {{ base_name }} - GeneWeb</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="page-header">
+            <nav class="breadcrumb">
+                <a href="/{{ base_name }}">Home</a>
+                <span class="separator">›</span>
+                <span>Search</span>
+            </nav>
+            <div class="header-content">
+                <h1 class="page-title">Search Database</h1>
+                <p class="subtitle">Find individuals by name in the genealogy database</p>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <section class="search-section">
+                <form method="get" action="/{{ base_name }}/search" class="search-form">
+                    <div class="search-input-group">
+                        <input
+                            type="text"
+                            name="q"
+                            value="{{ query }}"
+                            placeholder="Enter first name or surname..."
+                            class="search-input"
+                            autofocus
+                        >
+                        <button type="submit" class="search-button">
+                            <span class="button-icon">🔍</span>
+                            <span class="button-text">Search</span>
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            {% if query %}
+            <section class="results-section">
+                <div class="results-header">
+                    <h2 class="results-title">
+                        Search Results for "<span class="query-highlight">{{ query }}</span>"
+                    </h2>
+                    {% if results %}
+                    <div class="results-badge">
+                        {{ results|length }} {{ 'result' if results|length == 1 else 'results' }} found
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if results %}
+                <div class="results-list">
+                    {% for person in results %}
+                    <div class="result-card">
+                        <a href="/{{ base_name }}/person/{{ person.id }}" class="result-link">
+                            <div class="result-main-info">
+                                <div class="result-header-info">
+                                    <h3 class="result-name">
+                                        {{ person.display_name }}
+                                        {% if person.occ > 0 %}<span class="occ-badge-small">({{ person.occ }})</span>{% endif %}
+                                    </h3>
+                                </div>
+
+                                <div class="result-details-grid">
+                                    {% if person.first_name or person.surname %}
+                                    <div class="result-detail-item">
+                                        <span class="result-detail-label">Name</span>
+                                        <span class="result-detail-value">
+                                            {% if person.first_name %}{{ person.first_name }}{% endif %}
+                                            {% if person.first_name and person.surname %} {% endif %}
+                                            {% if person.surname %}{{ person.surname }}{% endif %}
+                                        </span>
+                                    </div>
+                                    {% endif %}
+
+                                    {% if person.birth %}
+                                    <div class="result-detail-item">
+                                        <span class="result-detail-label">📅 Birth</span>
+                                        <span class="result-detail-value">
+                                            {{ person.birth.strftime('%B %d, %Y') }}
+                                            {% if person.birth_place %} - {{ person.birth_place }}{% endif %}
+                                        </span>
+                                    </div>
+                                    {% elif person.birth_place %}
+                                    <div class="result-detail-item">
+                                        <span class="result-detail-label">📍 Birth Place</span>
+                                        <span class="result-detail-value">{{ person.birth_place }}</span>
+                                    </div>
+                                    {% endif %}
+
+                                    {% if person.death %}
+                                    <div class="result-detail-item">
+                                        <span class="result-detail-label">💀 Death</span>
+                                        <span class="result-detail-value">
+                                            {{ person.death.strftime('%B %d, %Y') }}
+                                            {% if person.death_place %} - {{ person.death_place }}{% endif %}
+                                        </span>
+                                    </div>
+                                    {% elif person.death_place %}
+                                    <div class="result-detail-item">
+                                        <span class="result-detail-label">📍 Death Place</span>
+                                        <span class="result-detail-value">{{ person.death_place }}</span>
+                                    </div>
+                                    {% endif %}
+
+                                    {% if person.age_at_death %}
+                                    <div class="result-detail-item">
+                                        <span class="result-detail-label">⏳ Lifespan</span>
+                                        <span class="result-detail-value">{{ person.age_at_death }} years</span>
+                                    </div>
+                                    {% endif %}
+
+                                    {% if person.public_name %}
+                                    <div class="result-detail-item">
+                                        <span class="result-detail-label">🏷️ Public Name</span>
+                                        <span class="result-detail-value">{{ person.public_name }}</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="result-footer">
+                                    <div class="result-meta-tags">
+                                        {% if person.birth %}
+                                        <span class="meta-badge meta-birth-small">
+                                            📅 {{ person.birth.year }}
+                                        </span>
+                                        {% endif %}
+                                        {% if person.death %}
+                                        <span class="meta-badge meta-death-small">
+                                            💀 {{ person.death.year }}
+                                        </span>
+                                        {% endif %}
+                                        {% if person.birth_place %}
+                                        <span class="meta-badge meta-place">
+                                            📍 Birth Place
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="result-link-arrow">→</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="no-results">
+                    <div class="no-results-icon">🔍</div>
+                    <h3 class="no-results-title">No Results Found</h3>
+                    <p class="no-results-message">Try different search terms or check your spelling. The search is case-insensitive and matches partial names.</p>
+                </div>
+                {% endif %}
+            </section>
+            {% else %}
+            <section class="search-help">
+                <div class="help-card">
+                    <h2 class="help-title">🔍 How to Search</h2>
+                    <ul class="help-list">
+                        <li>Enter a first name or surname to search the database</li>
+                        <li>Search is case-insensitive and matches partial names</li>
+                        <li>You can search for both first names and surnames</li>
+                        <li>Results will show all matching individuals with their key information</li>
+                    </ul>
+                </div>
+            </section>
+            {% endif %}
+        </main>
+
+        <footer class="page-footer">
+            <a href="/{{ base_name }}" class="footer-link">← Back to Database</a>
+        </footer>
+    </div>
+</body>
+</html>

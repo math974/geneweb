@@ -453,7 +453,9 @@ class BaseToGedcomConverter:
         _, is_primary = self._get_gedcom_event_tag(event_name)
         return is_primary
 
-    def _convert_all_events(self, individual: GedcomIndividual, person, iper: Iper) -> None:
+    def _convert_all_events(
+        self, individual: GedcomIndividual, person, iper: Iper
+    ) -> None:
         """
         Convert all events from person.events to GEDCOM events.
 
@@ -468,7 +470,15 @@ class BaseToGedcomConverter:
             return
 
         # Events already handled separately
-        excluded_event_names = {"birth", "birt", "naissance", "death", "deat", "décès", "deces"}
+        excluded_event_names = {
+            "birth",
+            "birt",
+            "naissance",
+            "death",
+            "deat",
+            "décès",
+            "deces",
+        }
 
         for event in person.events:
             if not event or not hasattr(event, "name"):
@@ -515,7 +525,11 @@ class BaseToGedcomConverter:
                     gedcom_event.sources = [event.src]
 
             # Only add event if it has meaningful data (date, place, or note)
-            if gedcom_event.date or (gedcom_event.place and gedcom_event.place.name) or gedcom_event.note:
+            if (
+                gedcom_event.date
+                or (gedcom_event.place and gedcom_event.place.name)
+                or gedcom_event.note
+            ):
                 individual.events.append(gedcom_event)
                 self.logger.debug(
                     f"Converted event '{event_name}' -> '{gedcom_event.tag}' for person {iper}"
@@ -559,7 +573,9 @@ class BaseToGedcomConverter:
         # For custom events, use EVEN with TYPE
         return event_name, False
 
-    def _convert_all_family_events(self, gedcom_family: GedcomFamily, family, ifam: Ifam) -> None:
+    def _convert_all_family_events(
+        self, gedcom_family: GedcomFamily, family, ifam: Ifam
+    ) -> None:
         """
         Convert all events from family.events to GEDCOM events.
 
@@ -620,7 +636,11 @@ class BaseToGedcomConverter:
                     gedcom_event.sources = [event.src]
 
             # Only add event if it has meaningful data
-            if gedcom_event.date or (gedcom_event.place and gedcom_event.place.name) or gedcom_event.note:
+            if (
+                gedcom_event.date
+                or (gedcom_event.place and gedcom_event.place.name)
+                or gedcom_event.note
+            ):
                 gedcom_family.events.append(gedcom_event)
                 self.logger.debug(
                     f"Converted family event '{event_name}' -> '{gedcom_event.tag}' for family {ifam}"

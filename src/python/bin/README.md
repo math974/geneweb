@@ -49,6 +49,27 @@ GEDCOM parser and utilities - for parsing and validating GEDCOM files.
 ./bin/gedcom --help
 ```
 
+### `gwd`
+
+GeneWeb Web Daemon - starts the GeneWeb web server for browsing MessagePack databases.
+
+```bash
+# Start server on default port (2317)
+./bin/gwd
+
+# Start server on custom port
+./bin/gwd --port 8080
+
+# Specify bases directory
+./bin/gwd --bases-dir /path/to/bases
+
+# Start with debug mode
+./bin/gwd --debug
+
+# Show help
+./bin/gwd --help
+```
+
 ### `geneweb-python`
 
 Generic runner for any Python module in the project.
