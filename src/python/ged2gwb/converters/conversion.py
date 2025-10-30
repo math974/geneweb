@@ -45,7 +45,7 @@ class GedcomConverter:
             birth_place = None
             if individual.birth:
                 if individual.birth.date:
-                birth_date = self.convert_date(individual.birth.date)
+                    birth_date = self.convert_date(individual.birth.date)
                 if individual.birth.place:
                     # Extract place name from GedcomPlace
                     birth_place = (
@@ -62,7 +62,7 @@ class GedcomConverter:
             death_place = None
             if individual.death:
                 if individual.death.date:
-                death_date = self.convert_date(individual.death.date)
+                    death_date = self.convert_date(individual.death.date)
                 if individual.death.place:
                     # Extract place name from GedcomPlace
                     death_place = (
@@ -215,7 +215,9 @@ class GedcomConverter:
                     date=baptism_date,
                     place=baptism_place,
                     note=individual.baptism.note if individual.baptism.note else "",
-                    src=", ".join(individual.baptism.sources) if individual.baptism.sources else "",
+                    src=", ".join(individual.baptism.sources)
+                    if individual.baptism.sources
+                    else "",
                 )
                 person.events.append(baptism_event)
 
@@ -233,14 +235,28 @@ class GedcomConverter:
                     date=burial_date,
                     place=burial_place,
                     note=individual.burial.note if individual.burial.note else "",
-                    src=", ".join(individual.burial.sources) if individual.burial.sources else "",
+                    src=", ".join(individual.burial.sources)
+                    if individual.burial.sources
+                    else "",
                 )
                 person.events.append(burial_event)
 
             # Other dedicated event fields
-            for event_attr in ["confirmation", "adult_christening", "bar_mitzvah", "bas_mitzvah",
-                               "blessing", "ordination", "adoption", "naturalization",
-                               "probate", "will", "emigration", "immigration", "retirement"]:
+            for event_attr in [
+                "confirmation",
+                "adult_christening",
+                "bar_mitzvah",
+                "bas_mitzvah",
+                "blessing",
+                "ordination",
+                "adoption",
+                "naturalization",
+                "probate",
+                "will",
+                "emigration",
+                "immigration",
+                "retirement",
+            ]:
                 event_obj = getattr(individual, event_attr, None)
                 if event_obj:
                     event_name = event_obj.tag
@@ -255,7 +271,9 @@ class GedcomConverter:
                             else str(event_obj.place)
                         )
                     event_note = event_obj.note if event_obj.note else ""
-                    event_src = ", ".join(event_obj.sources) if event_obj.sources else ""
+                    event_src = (
+                        ", ".join(event_obj.sources) if event_obj.sources else ""
+                    )
 
                     event = Event(
                         name=event_name,
@@ -280,7 +298,9 @@ class GedcomConverter:
                             else str(census_event.place)
                         )
                     event_note = census_event.note if census_event.note else ""
-                    event_src = ", ".join(census_event.sources) if census_event.sources else ""
+                    event_src = (
+                        ", ".join(census_event.sources) if census_event.sources else ""
+                    )
 
                     event = Event(
                         name="CENS",
@@ -305,7 +325,9 @@ class GedcomConverter:
                             else str(resi_event.place)
                         )
                     event_note = resi_event.note if resi_event.note else ""
-                    event_src = ", ".join(resi_event.sources) if resi_event.sources else ""
+                    event_src = (
+                        ", ".join(resi_event.sources) if resi_event.sources else ""
+                    )
 
                     event = Event(
                         name="RESI",
@@ -352,7 +374,7 @@ class GedcomConverter:
             marriage_place = None
             if family.marriage:
                 if family.marriage.date:
-                marriage_date = self.convert_date(family.marriage.date)
+                    marriage_date = self.convert_date(family.marriage.date)
                 if family.marriage.place:
                     # Extract place name from GedcomPlace
                     marriage_place = (
@@ -495,8 +517,14 @@ class GedcomConverter:
                     geneweb_family.events.append(event)
 
             # Convert events from dedicated family event fields
-            for event_attr in ["engagement", "marriage_banns", "marriage_contract",
-                               "marriage_license", "marriage_settlement", "annulment"]:
+            for event_attr in [
+                "engagement",
+                "marriage_banns",
+                "marriage_contract",
+                "marriage_license",
+                "marriage_settlement",
+                "annulment",
+            ]:
                 event_obj = getattr(family, event_attr, None)
                 if event_obj:
                     event_name = event_obj.tag
@@ -511,7 +539,9 @@ class GedcomConverter:
                             else str(event_obj.place)
                         )
                     event_note = event_obj.note if event_obj.note else ""
-                    event_src = ", ".join(event_obj.sources) if event_obj.sources else ""
+                    event_src = (
+                        ", ".join(event_obj.sources) if event_obj.sources else ""
+                    )
 
                     event = Event(
                         name=event_name,
@@ -536,7 +566,9 @@ class GedcomConverter:
                             else str(census_event.place)
                         )
                     event_note = census_event.note if census_event.note else ""
-                    event_src = ", ".join(census_event.sources) if census_event.sources else ""
+                    event_src = (
+                        ", ".join(census_event.sources) if census_event.sources else ""
+                    )
 
                     event = Event(
                         name="CENS",
